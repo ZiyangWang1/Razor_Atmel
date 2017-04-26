@@ -192,6 +192,8 @@ void PIOA_IrqHandler(void)
   /* Check if any port A buttons interrupted */
   if(u32ButtonInterrupts)
   {
+    static u8 u8ButtonCounter = 0;
+    u8ButtonCounter++;
     /* Parse through all the buttons to find those that have interrupted */
     for(u8 i = 0; i < TOTAL_BUTTONS; i++)
     {

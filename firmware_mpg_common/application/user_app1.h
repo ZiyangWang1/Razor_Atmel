@@ -19,6 +19,7 @@ Header file for user_app1.c
 
 #ifndef __USER_APP1_H
 #define __USER_APP1_H
+#define SWIFTTIME_MS 2000 
 
 /**********************************************************************************************************************
 Type Definitions

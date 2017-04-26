@@ -136,7 +136,140 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+#if 0 /* Set this to 1 to run the Task1 code */
+   static u32 u32Counter1 = 0;
+   static u32 u32Counter2 = 0;
+   static bool bLightSt = FALSE;
+   static u16 u16CounterLimitMs = 500;
+   static bool bInOrDe = FALSE;
+   
+   /* Do blink according to the limit*/
+   u32Counter1++;
+   u32Counter2++;
+   /* Switch light state when timer reaches the limit */
+   if(u32Counter1 > u16CounterLimitMs)
+   {
+     if(bLightSt == TRUE)
+     {
+       HEARTBEAT_OFF();
+       bLightSt = FALSE;
+     }
+     else
+     {
+       HEARTBEAT_ON();
+       bLightSt = TRUE;
+     }
+     /* Reset the timer */
+     u32Counter1 = 0;
+   }
+   
+   /* Change the limit according to the requirement */
+   /* Check if reach the swift-time */
+   if(u32Counter2 == SWIFTTIME_MS)
+   {
+     /* Check the limit is increasing or decreasing */
+     if(bInOrDe == TRUE)
+     {
+       /* Fix the data lose */
+       if(u16CounterLimitMs == 480)
+       {
+         u16CounterLimitMs += 20;
+       }/* end if */
+       /* Check if the limit reach the maximum */
+       if(u16CounterLimitMs == 500)
+       {
+         bInOrDe = FALSE;
+         u16CounterLimitMs /= 2;
+       }
+       else 
+       {
+           u16CounterLimitMs *= 2;
+       }
+     }/* end if(bInOrDe == TRUE) */
+     else/* If the limit is decreasing */
+     {
+       /* Check if the limit reach the minimum */
+       if(u16CounterLimitMs == 15)
+       {
+         bInOrDe = TRUE;
+         u16CounterLimitMs *= 2;
+       }
+       else
+       {
+         u16CounterLimitMs /= 2;
+       }
+     }/* end else */
+     /* Reset the timer */
+     u32Counter2 = 0;
+   }
+#endif
+   
+#if 0 /* Set this to 1 to run the Task2 code */
+   static u32 u32Counter1 = 0;
+   static u32 u32Counter2 = 0;
+   static u32 u32DutyTime = 0;
+   static bool bInOrDe = FALSE;
+   
+   /* Do blink at 100Hz */
+   u32Counter2++;
+   /* Keep light off when duty time is 0 */
+   if(u32DutyTime == 0)
+   {
+     HEARTBEAT_OFF();
+   }
+   else
+   {
+     /* Turn light off when finish the duty time */
+     if(u32Counter1 == u32DutyTime)
+     {
+       HEARTBEAT_OFF();
+     }
+     u32Counter1++;
+     
+     /* Turn light on when finish the cycle */
+     if(u32Counter1 == 10)
+     {
+       HEARTBEAT_ON();
+       /*Reset the timer */
+       u32Counter1 = 0;
+     }
+   }
 
+   /* Change the duty time according to the requirement */
+   /* Check if reach the swift-time */
+   if(u32Counter2 == 100)
+   {
+     /* Check the duty time is increasing or decreasing */
+     if(bInOrDe == TRUE)
+     {
+       /* Check if the duty time reach the maximum */
+       if(u32DutyTime == 10)
+       {
+         bInOrDe = FALSE;
+         u32DutyTime--;
+       }
+       else 
+       {
+         u32DutyTime++;
+       }
+     }/* end if(bInOrDe == TRUE) */
+     else/* If the duty time is decreasing */
+     {
+       /* Check if the duty time reach the minimum */
+       if(u32DutyTime == 0)
+       {
+         bInOrDe = TRUE;
+         u32DutyTime++;
+       }
+       else
+       {
+         u32DutyTime--;
+       }
+     }/* end else */
+     /* Reset the timer */
+     u32Counter2 = 0;
+   }
+#endif
 } /* end UserApp1SM_Idle() */
     
 #if 0
