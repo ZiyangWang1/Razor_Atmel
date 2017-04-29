@@ -87,7 +87,15 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
- 
+    /* Turn off all LED */
+    LedOff(RED);
+    LedOff(WHITE);
+    LedOff(PURPLE);
+    LedOff(BLUE);
+    LedOff(CYAN);
+    LedOff(GREEN);
+    LedOff(YELLOW);
+    LedOff(ORANGE);
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -134,11 +142,102 @@ State Machine Function Definitions
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ??? */
+u8 ButtonScan(void)
+{
+   u8 u8ButtonValue = 0;
+   if(WasButtonPressed(BUTTON0))
+   {
+     ButtonAcknowledge(BUTTON0);
+     u8ButtonValue = 1;
+   }
+   if(WasButtonPressed(BUTTON1))
+   {
+     ButtonAcknowledge(BUTTON1);
+     u8ButtonValue = 2;
+   }
+   if(WasButtonPressed(BUTTON2))
+   {
+     ButtonAcknowledge(BUTTON2);
+     u8ButtonValue = 3;
+   }
+   if(WasButtonPressed(BUTTON3))
+   {
+     ButtonAcknowledge(BUTTON3);
+     u8ButtonValue = 4;
+   }
+   return u8ButtonValue;
+}
+  
 static void UserApp1SM_Idle(void)
 {
-
+#if 0
+   /* Set an LED to blink at 2Hz */
+   static u32 u32Counter = 0;
+   u32Counter++;
+   if(u32Counter == 250)
+   {
+     LedToggle(RED);
+     u32Counter = 0;
+   }
+#endif
+   
+#if 1
+   static u8 u8ButtonValue = 9;/* No Button has been pressed */
+   static u32 u32Counter1 = 0;
+   static u32 u32Counter2 = 0;
+   static u8 au8PassWords[6] = {10,10,10,10,10,10};
+   
+   /* Turn off BLUE and RED LED per second */
+   u32Counter2++;
+   if(u32Counter2 == 1000)
+   {
+     LedOff(BLUE);
+     LedOff(RED);
+     u32Counter2 = 0;
+   }
+   /* Get which button has been pressed */
+   u8ButtonValue = ButtonScan();
+   /* Save the number and turn on the red LED when there is a button pressed */
+   switch(u8ButtonValue)
+   {
+   case 1:
+     au8PassWords[u32Counter1] = 1;
+     u32Counter1++;
+     LedOn(RED);
+     break;
+   case 2:
+     au8PassWords[u32Counter1] = 2;
+     u32Counter1++;
+     LedOn(RED);
+     break;
+   case 3:
+     au8PassWords[u32Counter1] = 3;
+     u32Counter1++;
+     LedOn(RED);
+     break;
+   case 4:
+     au8PassWords[u32Counter1] = 4;
+     u32Counter1++;
+     LedOn(RED);
+     break;
+   }
+   /* Check the password when reach six numbers */
+   if(u32Counter1 == 6)
+   {
+     /* Turn on the green LED when password is correct */
+     if(au8PassWords[0] == 2&&au8PassWords[1] == 2&&au8PassWords[2] == 3&&au8PassWords[3] == 3&&au8PassWords[4] == 4&&au8PassWords[5] == 4)
+     {
+       LedOn(GREEN);
+     }
+     else/* Turn on the green LED when password is incorrect and reset the password */
+     {
+       LedOn(BLUE);
+       u32Counter1 = 0;
+     }
+   }
+#endif
 } /* end UserApp1SM_Idle() */
-    
+
 #if 0
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */
