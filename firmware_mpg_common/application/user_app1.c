@@ -48,6 +48,8 @@ static bool bSetting = FALSE;
 static bool bInputting = FALSE;
 static bool bScaning = FALSE;
 static bool bSetComplete = FALSE;
+static bool bBlinkFlag_RED = FALSE;
+static bool bBlinkFlag_GREEN = FALSE;
 static u8 au8key[] = {10,10,10,10,10,10,10,10,10,10};
 static u8 au8password[] = {10,10,10,10,10,10,10,10,10,10};
   
@@ -147,6 +149,48 @@ void UserApp1RunActiveState(void)
 
 
 /*----------------------------------------------------------------------------------------------------------------------
+Function: WasButtonHeld
+
+Describe:
+Check if the button was held anytime since last checked,
+even if it is no longer pressed.
+
+Require:
+   -The location of the button(u32Button_) and holding time in ms
+    (u32ButtonHeldTime_).
+
+Promise:
+   -Return TRUE when the button was held since last checked,
+    or return FALSE if not.
+
+*/
+bool WasButtonHeld(u32 u32Button_, u32 u32ButtonHeldTime_)
+{
+	if(IsButtonHeld(u32Button_,u32ButtonHeldTime_))
+        {
+          return WasButtonPressed(u32Button_);
+        }
+          return FALSE;
+}
+           
+/*----------------------------------------------------------------------------------------------------------------------
+Function: ButtonHeldAcknowledge
+
+Description:
+Clears the New Press state of a button.
+
+Requires:
+  - u32Button_ is a valid button index
+ 
+Promises:
+  - The flag at Button_abNewPress[u32Button_] is set to FALSE
+*/
+void ButtonHeldAcknowledge(u32 u32Button_)
+{
+  ButtonAcknowledge(u32Button_);
+}
+
+/*----------------------------------------------------------------------------------------------------------------------
 Function: ScanToArray
 
 Description:
@@ -213,14 +257,16 @@ Promises:
 void SetPassword(void)
 {
   /* Blink red and green LED at 2Hz */ 
-  static u32 u32Counter = 0;
-  u32Counter++;
-  if(u32Counter == 250)
+  if(bBlinkFlag_GREEN == FALSE)
   {
-    LedToggle(RED);
-    LedToggle(GREEN);
-    u32Counter = 0;
-  } 
+    LedBlink(GREEN,LED_2HZ);
+    bBlinkFlag_GREEN = TRUE;
+  }  
+  if(bBlinkFlag_RED == FALSE)
+  {
+    LedBlink(RED,LED_2HZ);
+    bBlinkFlag_RED = TRUE;
+  }
   /* Scan pressed buttons to key array */ 
   bScaning = TRUE;
   ScanToArray(au8key);
@@ -304,16 +350,16 @@ static void UserApp1SM_Idle(void)
   {
     /* Turn off red LED and blink green LED when unlocked*/
     LedOff(RED);
-    static u32 u32Counter = 0;
-    u32Counter++;
-    if(u32Counter == 250)
+    bBlinkFlag_RED = FALSE;
+    if(bBlinkFlag_GREEN == FALSE)
     {
-      LedToggle(GREEN);
-      u32Counter = 0;
-    } 
-    if(IsButtonHeld(BUTTON3,2000))
+      LedBlink(GREEN,LED_2HZ);
+      bBlinkFlag_GREEN = TRUE;
+    }
+    if(WasButtonHeld(BUTTON3,2000))
     {
       /* Hold BUTTON3 for 2s to go to password setting mode when unlocked */
+      ButtonHeldAcknowledge(BUTTON3);
       bSetting = TRUE;
       bLocked = TRUE;
       bSetComplete = FALSE;
@@ -324,13 +370,11 @@ static void UserApp1SM_Idle(void)
     if(bLockdown == TRUE)
     {
       /* Blink red LED at 2Hz in lockdown mode */
-      static u32 u32Counter = 0;
-      u32Counter++;
-      if(u32Counter == 250)
+      if(bBlinkFlag_RED == FALSE)
       {
-        LedToggle(RED);
-        u32Counter = 0;
-      }   
+        LedBlink(RED,LED_2HZ);
+        bBlinkFlag_RED = TRUE;
+      }
       /* Press BUTTON3 to exit lockdown mode to try it again */
       if(WasButtonPressed(BUTTON3))
       {
@@ -347,9 +391,10 @@ static void UserApp1SM_Idle(void)
       }
       else/* If setting finished */
       {
-        if(IsButtonHeld(BUTTON3,2000))
+        if(WasButtonHeld(BUTTON3,2000))
         {
           /* Hold BUTTON3 for 2s to enter password setting mode */
+          ButtonHeldAcknowledge(BUTTON3);
           bSetting = TRUE;
           SetPassword();
         }
@@ -359,6 +404,9 @@ static void UserApp1SM_Idle(void)
           {
             /* Turn red LED on to show locked and start inputting password whose attempt to unlock */
             LedOn(RED);
+            LedOff(GREEN);
+            bBlinkFlag_GREEN = FALSE;
+            bBlinkFlag_RED = FALSE;
             bInputting = TRUE;
             Input();
             if(bInputting == FALSE)

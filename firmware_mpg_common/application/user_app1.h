@@ -53,6 +53,8 @@ void ScanToArray(u8*);
 void SetPassword(void);
 void Input(void);
 void CheckPassword(void);
+bool WasButtonHeld(u32 u32Button_, u32 u32ButtonHeldTime_);
+void ButtonHeldAcknowledge(u32 u32Button_);
 
 
 /***********************************************************************************************************************
