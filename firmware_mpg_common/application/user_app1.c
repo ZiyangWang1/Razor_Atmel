@@ -87,7 +87,14 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
- 
+  LedOff(WHITE);
+  LedOff(PURPLE);
+  LedOff(BLUE);
+  LedOff(CYAN);
+  LedOff(GREEN);
+  LedOff(YELLOW);
+  LedOff(ORANGE);
+  LedOff(RED);
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -136,7 +143,75 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-
+#if 0
+  static u32  u32IndexTimer=0;
+  static u8 au8MyName[]="WangZiyang\n";
+  if(u32IndexTimer++==5000)
+  {
+    u32IndexTimer=0;
+    DebugPrintf(au8MyName);
+    DebugLineFeed();
+    
+  }
+#endif
+  
+#if 0
+  u8 au8InputData[]={0,0,0,0};
+  static u8 u8DataCount=0;
+  u8DataCount += DebugScanf(au8InputData);
+  if(u8DataCount>4)
+  {
+    DebugPrintf("a a");
+  }
+#endif
+  
+#if 0
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+    DebugPrintf("1");
+  }
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+    DebugPrintf("2");
+  }
+  if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+    DebugPrintf("3");
+  }
+  if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+    DebugPrintf("4");
+  }
+#endif
+  
+#if 0
+  u8 au8InputData[]={0};
+  DebugScanf(au8InputData);
+  if(au8InputData[0] == '1')
+  {
+    LedOn(RED);
+  }
+  if(au8InputData[0] ==5 '2')
+  {
+    LedOn(ORANGE);
+  }
+  if(au8InputData[0] == '3')
+  {
+    LedOn(YELLOW);
+  }
+  if(au8InputData[0] == '4')
+  {
+    LedOff(YELLOW);
+    LedOff(ORANGE);
+    LedOff(RED);
+  }
+#endif
+  
+  
 } /* end UserApp1SM_Idle() */
     
 #if 0
