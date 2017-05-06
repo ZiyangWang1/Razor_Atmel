@@ -136,7 +136,40 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-
+  if(IsButtonPressed(BUTTON0))
+  {
+    PWMAudioSetFrequency(BUZZER1,262);
+    PWMAudioOn(BUZZER1);
+  }
+  else
+  {
+    if(IsButtonPressed(BUTTON1))
+    {
+      PWMAudioSetFrequency(BUZZER1,294);
+      PWMAudioOn(BUZZER1);
+    }
+    else
+    {
+      if(IsButtonPressed(BUTTON2))
+      {
+        PWMAudioSetFrequency(BUZZER1,330);
+        PWMAudioOn(BUZZER1);
+      }
+      else
+      {
+        if(IsButtonPressed(BUTTON3))
+        {
+          PWMAudioSetFrequency(BUZZER1,392);
+          PWMAudioOn(BUZZER1);
+        }
+        else
+        {
+          PWMAudioOff(BUZZER1);
+        }
+      }
+    }
+  }
+  
 } /* end UserApp1SM_Idle() */
     
 #if 0
