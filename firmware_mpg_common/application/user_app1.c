@@ -51,6 +51,8 @@ extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
+extern volatile u8 G_au8DebugScanfBuffer[DEBUG_SCANF_BUFFER_SIZE]; /* Space to latch characters for DebugScanf() */
+extern volatile u8 G_u8DebugScanfCharCount;                    /* Counter for # of characters in Debug_au8ScanfBuffer */
 
 
 /***********************************************************************************************************************
@@ -127,7 +129,128 @@ void UserApp1RunActiveState(void)
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function UserApp1_CutoutModule()
 
+Description:
+Cutout the latest 4 letters in the G_au8DebugScanfBuffer array.
+
+Requires:
+  - Return a pointer pointed to an empty array .
+
+Promises:
+  - Call this function to fill an array with the 4 letters.
+*/
+void UserApp1_CutoutModule(u8* au8temp)
+{
+  u32 i;
+  /* Cutout the latest 4 letters in the G_au8DebugScanfBuffer array. */
+  for(i=0;i<4;i++)
+  {
+    au8temp[i] = G_au8DebugScanfBuffer[G_u8DebugScanfCharCount-1-i];
+  }
+  return ;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function UserApp1_CheckModule()
+
+Description:
+Check the latest 4 letters in the G_au8DebugScanfBuffer array if match
+my name.
+
+Requires:
+  - Require a pointer pointed to an array made up with the 4 letters,
+    and another pointer pointed to a counter counts the number of your name has been called. 
+
+Promises:
+  - Call this function to operate checking procedure.
+*/
+void UserApp1_CheckModule(u8* au8temp,u32* pu32Counter,u8* pu8CharCount)
+{
+  u32 i;
+  static u8 au8Name[]="gnaw";
+  for(i=0;i<4;i++)
+  {
+    if(au8temp[i]!=au8Name[i])
+    {
+      /* Do noting if not match */
+      return;
+    }
+  }
+  /* Output and clear the buffer if match */
+  UserApp1_OutputModule(pu32Counter);
+  for(i = 0; i < G_u8DebugScanfCharCount; i++)
+  {
+    G_au8DebugScanfBuffer[i] = '\0';
+  }
+  G_u8DebugScanfCharCount = 0;
+  *pu8CharCount = 2;
+  return;
+}
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function UserApp1_OutputModule()
+
+Description:
+Output the number of your name has been called.
+
+Requires:
+  - Require a pointer pointed to a counter counts the number of your name has been called.
+
+Promises:
+  - Call this function to print the number of your name has been called surrounded with stars.
+*/
+void UserApp1_OutputModule(u32* pu32Counter)
+{
+  u32 i,StarNumber=0;
+  (*pu32Counter)++;
+  /* Figure out haw many figures within u32Counter */
+  for(i=0;*pu32Counter/pow(10,i)!=0;i++)
+  {
+    StarNumber++;
+  }
+  DebugPrintf("\r\n");
+  /* Print the above stars */
+  for(i=0;i<StarNumber+2;i++)
+  {
+    DebugPrintf("*");
+  }
+  DebugPrintf("\r\n");
+  /* Print the number and two stars */
+  DebugPrintf("*");
+  DebugPrintNumber(*pu32Counter);
+  DebugPrintf("*");
+  DebugPrintf("\r\n");
+  /* Print the below stars */
+  for(i=0;i<StarNumber+2;i++)
+  {
+    DebugPrintf("*");
+  }
+  DebugPrintf("\r\n");
+}
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function pow()
+
+Description:
+Calculate the power of a number
+
+Requires:
+  - Require 2 u32 number to be powered
+
+Promises:
+  - Return the Yth power of X
+*/
+u32 pow(u32 X,u32 Y)
+{
+  u32 i,u32result=1;
+  for(i=0;i<Y;i++)
+  {
+    u32result*=X;
+  }
+  return u32result;
+}
 /**********************************************************************************************************************
 State Machine Function Definitions
 **********************************************************************************************************************/
@@ -136,7 +259,25 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-
+#if 1 /* Set this to 1 to run the name check code */
+  static u8 u8CharCount=2;
+  static u8 *pu8CharCount = &u8CharCount;
+  static u8 au8temp[5];
+  static u32 u32Counter=0;
+  static u32 *pu32Counter = &u32Counter;
+  
+  /* Check if there are more than 3 letters in the buffer */
+  if(G_u8DebugScanfCharCount>2)
+  {
+    /* Check if new letter entered */
+    if(G_u8DebugScanfCharCount>u8CharCount)
+    {
+      u8CharCount++;
+      UserApp1_CutoutModule(au8temp);
+      UserApp1_CheckModule(au8temp,pu32Counter,pu8CharCount);   
+    }
+  }
+#endif
 } /* end UserApp1SM_Idle() */
     
 #if 0

@@ -49,7 +49,10 @@ void UserApp1RunActiveState(void);
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
-
+void UserApp1_CutoutModule(u8* au8temp);
+void UserApp1_CheckModule(u8* au8temp,u32* pu32Counter,u8* pu8CharCount);
+void UserApp1_OutputModule(u32* pu32Counter);
+u32 pow(u32 X,u32 Y);
 
 /***********************************************************************************************************************
 State Machine Declarations
