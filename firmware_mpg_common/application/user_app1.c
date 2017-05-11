@@ -144,6 +144,7 @@ Promises:
 void UserApp1_CutoutModule(u8* au8temp)
 {
   u32 i;
+  
   /* Cutout the latest 4 letters in the G_au8DebugScanfBuffer array. */
   for(i=0;i<4;i++)
   {
@@ -170,6 +171,7 @@ void UserApp1_CheckModule(u8* au8temp,u32* pu32Counter,u8* pu8CharCount)
 {
   u32 i;
   static u8 au8Name[]="gnaw";
+  
   for(i=0;i<4;i++)
   {
     if(au8temp[i]!=au8Name[i])
@@ -178,7 +180,7 @@ void UserApp1_CheckModule(u8* au8temp,u32* pu32Counter,u8* pu8CharCount)
       return;
     }
   }
-  /* Output and clear the buffer if match */
+  /* Output and clear the buffer to avoid repetition if match */
   UserApp1_OutputModule(pu32Counter);
   for(i = 0; i < G_u8DebugScanfCharCount; i++)
   {
@@ -204,12 +206,14 @@ Promises:
 void UserApp1_OutputModule(u32* pu32Counter)
 {
   u32 i,StarNumber=0;
+  
   (*pu32Counter)++;
   /* Figure out haw many figures within u32Counter */
   for(i=0;*pu32Counter/pow(10,i)!=0;i++)
   {
     StarNumber++;
   }
+#if 0 /* Set this to 1 to run the classic output code */
   DebugPrintf("\r\n");
   /* Print the above stars */
   for(i=0;i<StarNumber+2;i++)
@@ -228,6 +232,58 @@ void UserApp1_OutputModule(u32* pu32Counter)
     DebugPrintf("*");
   }
   DebugPrintf("\r\n");
+#endif
+  
+#if 1 /* Set this to 1 to run the advanced output code */
+  /* Create a temporary u32 to store counter's number to operate without changing it */
+  u32 j=0,u32temp=*pu32Counter;
+  /* Create an array to store everything need to be output */
+  u8 au8Output[80]="\0";
+  
+  au8Output[j]='\r';
+  j++;
+  au8Output[j]='\n';
+  j++;
+  /* Put the above stars into the array */
+  for(i=0;i<StarNumber+2;i++)
+  {
+    au8Output[j]='*';
+    j++;
+  }
+  au8Output[j]='\r';
+  j++;
+  au8Output[j]='\n';
+  j++;
+  /* Put two stars and the string form of the number into the array */
+  au8Output[j]='*';
+  j++;
+  /* Convert the number into figures */
+  for(i=0;i<StarNumber;i++)
+  {
+    au8Output[j]=(u8)((u32temp/pow(10,(StarNumber-1-i)))+0x30);
+    u32temp-=((u32temp/pow(10,(StarNumber-1-i)))*pow(10,(StarNumber-1-i)));
+    j++;
+  }
+  au8Output[j]='*';
+  j++;
+  au8Output[j]='\r';
+  j++;
+  au8Output[j]='\n';
+  j++;
+  /* Put the below stars into the array */
+  for(i=0;i<StarNumber+2;i++)
+  {
+    au8Output[j]='*';
+    j++;
+  }
+  au8Output[j]='\r';
+  j++;
+  au8Output[j]='\n';
+  j++;
+  /* Output the array */
+  DebugPrintf(au8Output);
+ 
+#endif
 }
 
 /*--------------------------------------------------------------------------------------------------------------------
@@ -245,6 +301,7 @@ Promises:
 u32 pow(u32 X,u32 Y)
 {
   u32 i,u32result=1;
+  
   for(i=0;i<Y;i++)
   {
     u32result*=X;
