@@ -148,7 +148,7 @@ void UserApp1_CutoutModule(u8* au8temp)
   /* Cutout the latest 4 letters in the G_au8DebugScanfBuffer array. */
   for(i=0;i<4;i++)
   {
-    au8temp[i] = G_au8DebugScanfBuffer[G_u8DebugScanfCharCount-1-i];
+    au8temp[i] = G_au8DebugScanfBuffer[G_u8DebugScanfCharCount-4+i];
   }
   return ;
 }
@@ -170,7 +170,7 @@ Promises:
 void UserApp1_CheckModule(u8* au8temp,u32* pu32Counter,u8* pu8CharCount)
 {
   u32 i;
-  static u8 au8Name[]="gnaw";
+  static u8 au8Name[]="wang";
   
   for(i=0;i<4;i++)
   {
@@ -208,7 +208,7 @@ void UserApp1_OutputModule(u32* pu32Counter)
   u32 i,StarNumber=0;
   
   (*pu32Counter)++;
-  /* Figure out haw many figures within u32Counter */
+  /* Figure out haw many figures in u32Counter */
   for(i=0;*pu32Counter/pow(10,i)!=0;i++)
   {
     StarNumber++;
@@ -238,7 +238,7 @@ void UserApp1_OutputModule(u32* pu32Counter)
   /* Create a temporary u32 to store counter's number to operate without changing it */
   u32 j=0,u32temp=*pu32Counter;
   /* Create an array to store everything need to be output */
-  u8 au8Output[80]="\0";
+  u8 au8Output[20]="\0";
   
   au8Output[j]='\r';
   j++;
