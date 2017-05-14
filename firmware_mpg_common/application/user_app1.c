@@ -87,7 +87,31 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
- 
+  /*
+  LCDCommand(LCD_CLEAR_CMD);
+  u8 au8Message[]="Hello world!";
+  LCDMessage(LINE1_START_ADDR,au8Message);
+  LCDClearChars(LINE1_START_ADDR+5,7);
+  LCDMessage(LINE2_START_ADDR,"[");
+  LCDMessage(LINE2_END_ADDR,"]");
+  LCDMessage(LINE2_START_ADDR+8,"EiE");
+  LCDCommand(LCD_DISPLAY_CMD);
+  LCDCommand(LCD_DISPLAY_CMD|LCD_DISPLAY_ON);
+  LCDCommand(LCD_DISPLAY_CMD|LCD_DISPLAY_ON|LCD_DISPLAY_CURSOR);
+  LCDCommand(LCD_DISPLAY_CMD|LCD_DISPLAY_ON|LCD_DISPLAY_CURSOR|LCD_DISPLAY_BLINK);
+  LCDCommand(LCD_HOME_CMD);
+  LCDCommand(LCD_ADDRESS_CMD|2);
+  */
+  /*
+  LCDCommand(LCD_CLEAR_CMD);
+  u8 au8Message[]="Wang";
+  LCDMessage(LINE1_START_ADDR,au8Message);
+  LCDMessage(LINE2_START_ADDR,"0     1     2");
+  LCDMessage(LINE2_END_ADDR,"3");
+  */
+  
+  
+  
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -136,6 +160,27 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  static bool bFlag = FALSE;
+  static u8 u8Location=0;
+  if(bFlag == FALSE && IsButtonPressed(BUTTON0))
+  {
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDCommand(LCD_DISPLAY_CMD|LCD_DISPLAY_ON|LCD_DISPLAY_CURSOR);
+    LCDCommand(LCD_DISPLAY_CMD|LCD_DISPLAY_ON|LCD_DISPLAY_CURSOR|LCD_DISPLAY_BLINK);
+    bFlag = TRUE;
+  }
+  if(WasButtonPressed(BUTTON3) && u8Location!=0)
+  {
+    ButtonAcknowledge(BUTTON3);
+    u8Location--;
+    LCDCommand(LCD_ADDRESS_CMD|u8Location);
+  }
+  if(WasButtonPressed(BUTTON2) && u8Location!=19)
+  {
+    ButtonAcknowledge(BUTTON2);
+    u8Location++;
+    LCDCommand(LCD_ADDRESS_CMD|u8Location);
+  }
 
 } /* end UserApp1SM_Idle() */
     
