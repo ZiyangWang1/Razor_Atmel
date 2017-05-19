@@ -35,7 +35,6 @@ Runs current task state.  Should only be called once in main loop.
 **********************************************************************************************************************/
 
 #include "configuration.h"
-#define length 55
 
 /***********************************************************************************************************************
 Global variable definitions with scope across entire project.
@@ -43,7 +42,7 @@ All Global variable names shall start with "G_UserApp1"
 ***********************************************************************************************************************/
 /* New variables */
 volatile u32 G_u32UserApp1Flags;                       /* Global state flags */
-u8 au8RawString[168]="\0";
+
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Existing variables (defined in other files -- should all contain the "extern" keyword) */
@@ -53,7 +52,7 @@ extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
 extern volatile u8 G_au8DebugScanfBuffer[DEBUG_SCANF_BUFFER_SIZE]; /* Space to latch characters for DebugScanf() */
-extern volatile u8 G_u8DebugScanfCharCount = 0;                    /* Counter for # of characters in Debug_au8ScanfBuffer */
+extern volatile u8 G_u8DebugScanfCharCount;                    /* Counter for # of characters in Debug_au8ScanfBuffer */
 
 
 /***********************************************************************************************************************
@@ -90,9 +89,6 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  static u8 au8TargetString[]="Welcome to watch this LCD programed by Wang and Sheng. ";
-  UserApp1RawStringCreationModule(au8TargetString,au8RawString);
-
  
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -141,19 +137,22 @@ Add 40 blanks to target string, and save as raw string.
 
 Requires:
   - Two pointers pointed to target string and raw string.
+  - The length of target string.
 
 Promises:
   - Calls the function to create raw string.
 */
-void UserApp1RawStringCreationModule(u8* au8TargetString,u8* au8RawString)
+void UserApp1RawStringCreationModule(u8* au8TargetString,u8* au8RawString,u8 u8StringLength)
 {
   u8 i=0;
   
+  /* Add 40 blanks at the begining of target string */
   for(i=0;i<40;i++)
   {
     au8RawString[i]=' ';
   }
-  for(;i<(length+40);i++)
+  /* Put target string after the blanks */
+  for(;i<(u8StringLength+40);i++)
   {
     au8RawString[i]=au8TargetString[i-40];
   }
@@ -168,20 +167,23 @@ Cut out a string with 20 letters from the raw string according to the roll count
 
 Requires:
   - Three pointers pointed to raw string, roll counter, and output string.
+  - The length of target string.
 
 Promises:
   - Calls the function to create a 20-letter-string for output.
 */
-void UserApp1CutoutModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString)
+void UserApp1CutoutModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString,u8 u8StringLength)
 {
   u8 i=0;
   
   for(;i<20;i++)
   {
-    if((i+(*pu8RollCount))>(length+40-1))
+    /* Cut from the begining when reach the last one */
+    if((i+(*pu8RollCount))>(u8StringLength+40-1))
     {
-      au8OutputString[i]=au8RawString[i+(*pu8RollCount)-length];
+      au8OutputString[i]=au8RawString[i+(*pu8RollCount)-u8StringLength];
     }
+    /* Cut one by one when have not reach the last one */
     else
     {
       au8OutputString[i]=au8RawString[i+(*pu8RollCount)];
@@ -198,14 +200,16 @@ Increase the roll counter and create output string 1 .
 
 Requires:
   - Three pointers pointed to raw string, roll counter, and output string 1. 
+  - The length of target string.
 
 Promises:
   - Calls the function to create output string 1, and prepare for string 2 creation.
 */
-void UserApp1OutputString1CreationModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString1)
+void UserApp1OutputString1CreationModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString1,u8 u8StringLength)
 {
+  /* Move forward 1 step per second */
   (*pu8RollCount)++;
-  UserApp1CutoutModule(au8RawString,pu8RollCount,au8OutputString1);
+  UserApp1CutoutModule(au8RawString,pu8RollCount,au8OutputString1,u8StringLength);
   return;
 }
 
@@ -217,16 +221,19 @@ Create output string 2 following string 1.
 
 Requires:
   - Three pointers pointed to raw string, roll counter, and output string 2.
+  - The length of target string.
 
 Promises:
   - Calls the function to Create output string 2.
 */
-void UserApp1OutputString2CreationModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString2)
+void UserApp1OutputString2CreationModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString2,u8 u8StringLength)
 {
+  /* Cut another 20 letters after string 1 */
   (*pu8RollCount)+=20;
-  UserApp1CutoutModule(au8RawString,pu8RollCount,au8OutputString2);
+  UserApp1CutoutModule(au8RawString,pu8RollCount,au8OutputString2,u8StringLength);
   (*pu8RollCount)-=20;
-  if((*pu8RollCount)==(length+40-1))
+  /* Go to the first letter when roll to the last one */
+  if((*pu8RollCount)==(u8StringLength+40-1))
   {
     (*pu8RollCount)=39;
   }
@@ -246,18 +253,83 @@ static void UserApp1SM_Idle(void)
   static u8 au8OutputString2[20]="\0";
   static u8 u8RollCount=0;
   static u8* pu8RollCount=&u8RollCount;
+  static u8 au8TargetString[128]="\0";
+  static u8 u8StringLength=0;
+  static u8 au8RawString[168]="\0";
+  static bool bInputComplete=FALSE;
+  static bool bScreenDisplay=FALSE;
+  u8 i=0;
   
-  u32Count++;
-  if(u32Count==500)
+  /* Get the string when press Enter */
+  if(G_au8DebugScanfBuffer[G_u8DebugScanfCharCount-1]=='\r')
   {
-    u32Count=0;
-    UserApp1OutputString1CreationModule(au8RawString,pu8RollCount,au8OutputString1);
-    UserApp1OutputString2CreationModule(au8RawString,pu8RollCount,au8OutputString2);
-    LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR,au8OutputString1);
-    LCDMessage(LINE2_START_ADDR,au8OutputString2);
+    u8StringLength=DebugScanf(au8TargetString)-1;
+    bInputComplete=TRUE;
+    bScreenDisplay=FALSE;
+    /* Clean string 1&2 */
+    for(i=0;i<20;i++)
+    {
+      au8OutputString1[i]='\0';
+    }
+    for(i=0;i<20;i++)
+    {
+      au8OutputString2[i]='\0';
+    }
   }
-
+  if(bInputComplete)
+  {
+    /* Display on the first line when letter number is less than 21 */
+    if(u8StringLength<21)
+    {
+      for(i=0;i<u8StringLength;i++)
+      {
+        au8OutputString1[i]=au8TargetString[i];
+      }
+      if(bScreenDisplay==FALSE)
+      {
+        LCDCommand(LCD_CLEAR_CMD);
+        LCDMessage(LINE1_START_ADDR,au8OutputString1);
+        bScreenDisplay=TRUE;
+      }
+    }
+    else
+    {
+      /* Display on the second line when letter number is less than 41 */
+      if(u8StringLength<41)
+      {
+        for(i=0;i<20;i++)
+        {
+          au8OutputString1[i]=au8TargetString[i];
+        }
+        for(;i<u8StringLength;i++)
+        {
+          au8OutputString2[i-20]=au8TargetString[i];
+        }
+        if(bScreenDisplay==FALSE)
+        {
+          LCDCommand(LCD_CLEAR_CMD);
+          LCDMessage(LINE1_START_ADDR,au8OutputString1);
+          LCDMessage(LINE2_START_ADDR,au8OutputString2);
+          bScreenDisplay=TRUE;
+        }
+      }
+      else
+      {
+        /* Roll to display when letter number is more than 40 */
+        UserApp1RawStringCreationModule(au8TargetString,au8RawString,u8StringLength);
+        u32Count++;
+        if(u32Count==500)
+        {
+          u32Count=0;
+          UserApp1OutputString1CreationModule(au8RawString,pu8RollCount,au8OutputString1,u8StringLength);
+          UserApp1OutputString2CreationModule(au8RawString,pu8RollCount,au8OutputString2,u8StringLength);
+          LCDCommand(LCD_CLEAR_CMD);
+          LCDMessage(LINE1_START_ADDR,au8OutputString1);
+          LCDMessage(LINE2_START_ADDR,au8OutputString2);
+        }
+      }
+    }
+  }
 } /* end UserApp1SM_Idle() */
     
 #if 0
