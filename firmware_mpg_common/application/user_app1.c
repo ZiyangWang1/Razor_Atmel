@@ -35,6 +35,7 @@ Runs current task state.  Should only be called once in main loop.
 **********************************************************************************************************************/
 
 #include "configuration.h"
+#define length 55
 
 /***********************************************************************************************************************
 Global variable definitions with scope across entire project.
@@ -42,7 +43,7 @@ All Global variable names shall start with "G_UserApp1"
 ***********************************************************************************************************************/
 /* New variables */
 volatile u32 G_u32UserApp1Flags;                       /* Global state flags */
-
+u8 au8RawString[168]="\0";
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Existing variables (defined in other files -- should all contain the "extern" keyword) */
@@ -51,6 +52,8 @@ extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
+extern volatile u8 G_au8DebugScanfBuffer[DEBUG_SCANF_BUFFER_SIZE]; /* Space to latch characters for DebugScanf() */
+extern volatile u8 G_u8DebugScanfCharCount = 0;                    /* Counter for # of characters in Debug_au8ScanfBuffer */
 
 
 /***********************************************************************************************************************
@@ -87,6 +90,9 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+  static u8 au8TargetString[]="Welcome to watch this LCD programed by Wang and Sheng. ";
+  UserApp1RawStringCreationModule(au8TargetString,au8RawString);
+
  
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -127,6 +133,105 @@ void UserApp1RunActiveState(void)
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------------------------------------------------------
+Function UserApp1RawStringCreationModule()
+
+Description:
+Add 40 blanks to target string, and save as raw string.
+
+Requires:
+  - Two pointers pointed to target string and raw string.
+
+Promises:
+  - Calls the function to create raw string.
+*/
+void UserApp1RawStringCreationModule(u8* au8TargetString,u8* au8RawString)
+{
+  u8 i=0;
+  
+  for(i=0;i<40;i++)
+  {
+    au8RawString[i]=' ';
+  }
+  for(;i<(length+40);i++)
+  {
+    au8RawString[i]=au8TargetString[i-40];
+  }
+  return;
+}
+
+/*----------------------------------------------------------------------------------------------------------------------
+Function UserApp1CutoutModule()
+
+Description:
+Cut out a string with 20 letters from the raw string according to the roll counter.
+
+Requires:
+  - Three pointers pointed to raw string, roll counter, and output string.
+
+Promises:
+  - Calls the function to create a 20-letter-string for output.
+*/
+void UserApp1CutoutModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString)
+{
+  u8 i=0;
+  
+  for(;i<20;i++)
+  {
+    if((i+(*pu8RollCount))>(length+40-1))
+    {
+      au8OutputString[i]=au8RawString[i+(*pu8RollCount)-length];
+    }
+    else
+    {
+      au8OutputString[i]=au8RawString[i+(*pu8RollCount)];
+    }
+  }
+  return;
+}
+
+/*----------------------------------------------------------------------------------------------------------------------
+Function UserApp1OutputString1CreationModule()
+
+Description:
+Increase the roll counter and create output string 1 .
+
+Requires:
+  - Three pointers pointed to raw string, roll counter, and output string 1. 
+
+Promises:
+  - Calls the function to create output string 1, and prepare for string 2 creation.
+*/
+void UserApp1OutputString1CreationModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString1)
+{
+  (*pu8RollCount)++;
+  UserApp1CutoutModule(au8RawString,pu8RollCount,au8OutputString1);
+  return;
+}
+
+/*----------------------------------------------------------------------------------------------------------------------
+Function UserApp1OutputString2CreationModule()
+
+Description:
+Create output string 2 following string 1.
+
+Requires:
+  - Three pointers pointed to raw string, roll counter, and output string 2.
+
+Promises:
+  - Calls the function to Create output string 2.
+*/
+void UserApp1OutputString2CreationModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString2)
+{
+  (*pu8RollCount)+=20;
+  UserApp1CutoutModule(au8RawString,pu8RollCount,au8OutputString2);
+  (*pu8RollCount)-=20;
+  if((*pu8RollCount)==(length+40-1))
+  {
+    (*pu8RollCount)=39;
+  }
+  return ;
+}
 
 /**********************************************************************************************************************
 State Machine Function Definitions
@@ -136,6 +241,22 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  static u32 u32Count=0;
+  static u8 au8OutputString1[20]="\0";
+  static u8 au8OutputString2[20]="\0";
+  static u8 u8RollCount=0;
+  static u8* pu8RollCount=&u8RollCount;
+  
+  u32Count++;
+  if(u32Count==500)
+  {
+    u32Count=0;
+    UserApp1OutputString1CreationModule(au8RawString,pu8RollCount,au8OutputString1);
+    UserApp1OutputString2CreationModule(au8RawString,pu8RollCount,au8OutputString2);
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,au8OutputString1);
+    LCDMessage(LINE2_START_ADDR,au8OutputString2);
+  }
 
 } /* end UserApp1SM_Idle() */
     

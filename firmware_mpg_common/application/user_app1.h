@@ -49,6 +49,10 @@ void UserApp1RunActiveState(void);
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
+void UserApp1RawStringCreationModule(u8* au8TargetString,u8* au8RawString);
+void UserApp1CutoutModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString);
+void UserApp1OutputString1CreationModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString1);
+void UserApp1OutputString2CreationModule(u8* au8RawString,u8* pu8RollCount,u8* au8OutputString2);
 
 
 /***********************************************************************************************************************
