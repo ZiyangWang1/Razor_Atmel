@@ -74,7 +74,7 @@ static bool Button_abNewPress[TOTAL_BUTTONS];               /* Flags to indicate
 /* Add all of the GPIO pin names for the buttons in the system.  
 The order of the definitions below must match the order of the definitions provided in configuration.h */ 
 
-#ifdef EIE1
+#ifdef MPGL1
 static const u32 Button_au32ButtonPins[TOTAL_BUTTONS] = 
 {
   PA_17_BUTTON0, PB_00_BUTTON1, PB_01_BUTTON2, PB_02_BUTTON3
@@ -88,7 +88,7 @@ static ButtonConfigType Buttons_asArray[TOTAL_BUTTONS] =
  {BUTTON_ACTIVE_LOW, BUTTON_PORTB}, /* BUTTON2  */
  {BUTTON_ACTIVE_LOW, BUTTON_PORTB}, /* BUTTON3  */
 };   
-#endif /* EIE1 */
+#endif /* MPGL1 */
 
 #ifdef MPGL2
 static const u32 Button_au32ButtonPins[TOTAL_BUTTONS] = 
@@ -229,17 +229,16 @@ bool IsButtonHeld(u32 u32Button_, u32 u32ButtonHeldTime_)
 Function: ButtonInitialize
 
 Description:
-Configures the button system for the product including enabling button GPIO 
-interrupts. For all buttons, the default "Input Change Interrupt" is sufficient
-for providing the functionality needed.
+Configures the button system for the product including enabling button GPIO interrupts.  
 
 Requires:
   - GPIO configuration is already complete for all button inputs
   - Button interrupt initializations and handler functions are ready
  
 Promises:
-  - G_abButtonDebounceActive, Button_aeCurrentState and Button_aeNewState 
-    are initialized
+  - G_abButtonDebounceActive, LGaeButtonPreviousState and Button_aeCurrentState 
+    are intialized
+  - GGstButtonTrackballPosition fields are all initialized to default values
   - The button state machine is initialized to Idle
 */
 void ButtonInitialize(void)

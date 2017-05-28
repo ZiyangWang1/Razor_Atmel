@@ -17,8 +17,11 @@ Constants / Definitions
 #define _MESSAGING_TX_QUEUE_ALMOST_FULL (u32)0x00000002
 #define _DEQUEUE_GOT_NULL               (u32)0x00000004
 #define _DEQUEUE_MSG_NOT_FOUND          (u32)0x00000008
-  
-/* Tx buffer allocation: be aware of RAM usage when selecting the parameters below.
+
+#define _MESSAGING_0_MESSAGE_SIZE       (u32)0x00000010
+/* end  G_u32MessagingFlags */
+
+/* Tx buffer allocation: be aware of RAM usage when selecting the two parameters below.
 Queue size in bytes is TX_QUEUE_SIZE x MAX_TX_MESSAGE_LENGTH */
 
 #define TX_QUEUE_SIZE                   (u8)16         /* Number of messages allowed in the queue */
