@@ -66,7 +66,6 @@ extern volatile u32 G_u32SystemTime1ms;                /* From board-specific so
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
 
 
-
 /***********************************************************************************************************************
 Global variable definitions with scope limited to this local application.
 Variable names shall start with "UserApp2_" and be declared as static.
@@ -76,7 +75,6 @@ static fnCode_type UserApp2_StateMachine;            /* The state machine functi
 static LedDisplayListHeadType UserApp2_sDemoLedCommandList;   
 static LedDisplayListHeadType UserApp2_sUserLedCommandList;     
 static u32 UserApp2_u32SystemTime = 0;
-
 static LedDisplayListHeadType* UserApp2_psActiveList;
 static bool UserApp2_bSystemRunning = TRUE;
 static bool UserApp2_bSystemDark = FALSE;

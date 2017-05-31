@@ -37,10 +37,9 @@ extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
-
+extern LedDisplayListHeadType UserApp2_sUserLedCommandList;   /* From user_app2.c */
 extern u8 G_au8DebugScanfBuffer[DEBUG_SCANF_BUFFER_SIZE]; /* From debug.c */
 extern u8 G_u8DebugScanfCharCount;                        /* From debug.c */
-
 
 /***********************************************************************************************************************
 Global variable definitions with scope limited to this local application.
@@ -122,6 +121,52 @@ void UserApp1RunActiveState(void)
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserApp1Initialize
+
+Description:
+Initializes the State Machine and its variables.
+
+Requires:
+  -
+
+Promises:
+  - 
+*/
+void OutPutCmdLineList(bool* pbOutputFlag,LedDisplayListNodeType** ppsPresent)
+{
+  if(*pbOutputFlag)
+  {
+    DebugPrintf("LED   ON TIME    OFF TIME\n\r-----------------------\n\r");
+    *pbOutputFlag=FALSE;
+    *ppsPresent=UserApp2_sUserLedCommandList.psFirstCommand;
+  }
+  DebugPrintf(" ");
+  switch((*ppsPresent)->eCommand.eLED)
+  {
+  case RED: DebugPrintf("R\t");break;
+  case ORANGE: DebugPrintf("O\t");break;
+  case YELLOW: DebugPrintf("Y\t");break;
+  case GREEN: DebugPrintf("G\t");break;
+  case CYAN: DebugPrintf("C\t");break;
+  case BLUE: DebugPrintf("B\t");break;
+  case PURPLE: DebugPrintf("P\t");break;
+  case WHITE: DebugPrintf("W\t");break;
+  default: DebugPrintf("ERROR");
+  }
+  DebugPrintNumber((*ppsPresent)->eCommand.u32Time);
+  DebugPrintf("\t\t");
+  *ppsPresent=(*ppsPresent)->psNextNode;
+  DebugPrintNumber((*ppsPresent)->eCommand.u32Time);
+  DebugPrintf("\n\r");
+  *ppsPresent=(*ppsPresent)->psNextNode;
+  if(*ppsPresent==NULL)
+  {
+    DebugPrintf("-----------------------\n\r");
+    *pbOutputFlag=TRUE;
+  }
+
+}
 
 /**********************************************************************************************************************
 State Machine Function Definitions
@@ -131,7 +176,19 @@ State Machine Function Definitions
 /* Wait for input */
 static void UserApp1SM_Idle(void)
 {
+  static bool bOutputFlag=FALSE;
+  static LedDisplayListNodeType* psPresent=NULL;
+  static LedDisplayListNodeType** ppsPresent=&psPresent;
+  static bool* pbOutputFlag=&bOutputFlag;
   
+  static u32 u32Counter=0;
+  
+  if(u32Counter==5)
+  {
+    OutPutCmdLineList(pbOutputFlag,ppsPresent);
+    u32Counter=4;
+  }
+  u32Counter++;
 } /* end UserApp1SM_Idle() */
                       
             
