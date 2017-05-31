@@ -122,16 +122,17 @@ void UserApp1RunActiveState(void)
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------------------------------------------------------
-Function: UserApp1Initialize
+Function: OutPutCmdLineList
 
 Description:
-Initializes the State Machine and its variables.
+Output the user command.
 
 Requires:
-  -
+  - A pointer point to a bool variable show the output status.
+  - A pointer point to another pointer point to the currunt node need to be output.
 
 Promises:
-  - 
+  - Output the UserLedCommandList according to the request.
 */
 void OutPutCmdLineList(bool* pbOutputFlag,LedDisplayListNodeType** ppsPresent)
 {
@@ -142,6 +143,7 @@ void OutPutCmdLineList(bool* pbOutputFlag,LedDisplayListNodeType** ppsPresent)
     *ppsPresent=UserApp2_sUserLedCommandList.psFirstCommand;
   }
   DebugPrintf(" ");
+  /* Output the LED type */
   switch((*ppsPresent)->eCommand.eLED)
   {
   case RED: DebugPrintf("R\t");break;
@@ -154,9 +156,11 @@ void OutPutCmdLineList(bool* pbOutputFlag,LedDisplayListNodeType** ppsPresent)
   case WHITE: DebugPrintf("W\t");break;
   default: DebugPrintf("ERROR");
   }
+  /* Output the on time */
   DebugPrintNumber((*ppsPresent)->eCommand.u32Time);
   DebugPrintf("\t\t");
   *ppsPresent=(*ppsPresent)->psNextNode;
+  /* Output the off time */
   DebugPrintNumber((*ppsPresent)->eCommand.u32Time);
   DebugPrintf("\n\r");
   *ppsPresent=(*ppsPresent)->psNextNode;
