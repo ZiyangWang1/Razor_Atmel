@@ -146,6 +146,27 @@ void LedDisplayStartList(void)
   
 } /* end LedDisplayStartList */
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function: Check_and_Cutout
+
+Description:
+According to '-' ,the command line is divided into three parts,detect if  
+format is consistent with the L-S-E format, but does not detect the correctness
+of the contents of the order ,contents will be checked when put in the LIST .
+
+Requires:
+1.EnterStringParameter(CmdLine String)
+2.StrLenParameter(length of cmdline ,include '\r')
+3.CmdisLegalParameter(judge if the content is right)
+4.LedTypeParameter
+....
+8.au8OffStringParameter
+To avoid use too many global variables,so we have to Transfer many parameters.
+we didn't use struct to save those parameter,so it's long.
+
+Promises:
+  - 
+*/
 void Check_and_Cutout(u8* au8EnterStringParameter,u8* pu8StrLenParameter,bool* bpCmdisLegalParameter,u8* u8LedTypeParameter,u8* ps1Parameter,u8* ps2Parameter,u8* au8OnStringParameter,u8* au8OffStringParameter)
 { 
   bool bS2=FALSE;
@@ -157,14 +178,18 @@ void Check_and_Cutout(u8* au8EnterStringParameter,u8* pu8StrLenParameter,bool* b
       {
         *bpCmdisLegalParameter=FALSE;
         DebugPrintf("\n\rOne more space in the end\n\r");
+        DebugPrintNumber(UserApp2_sUserLedCommandList.u8ListSize/2+1);
+        DebugPrintf(" : ");
         return;
       }
       else
       {
         *bpCmdisLegalParameter=FALSE;
-        DebugPrintf("\n\rUndesired space before ");
+        DebugPrintf("\n\r Undesired space before ");
         DebugPrintf(&au8EnterStringParameter[i+1]);
         DebugPrintf("\n\r");
+        DebugPrintNumber(UserApp2_sUserLedCommandList.u8ListSize/2+1);
+        DebugPrintf(" : ");
         return;
       }
     }
@@ -242,6 +267,23 @@ void Check_and_Cutout(u8* au8EnterStringParameter,u8* pu8StrLenParameter,bool* b
   
 }
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function: SaveToRepository
+
+Description:
+Check the contents of the command line is correct or not, the correct order put 
+into the LIST,else return error
+
+Requires:
+1.LedTypeParameter
+2.s1Parameter(where the'-' is)
+3.s2Parameter(where the seconf '-' is)
+4.au8OnStringParameter(save Start Time)
+5.au8OffStringParameter(save End Time)
+6.StrLenParameter(length of cmdline ,include '\r')
+Promises:
+  - 
+*/
 void SaveToRepository(u8* u8LedTypeParameter,u8* s1Parameter,u8* s2Parameter,u8* au8OnStringParameter,u8* au8OffStringParameter,u8* pu8StrLenParameter) 
 {
   LedCommandType sStartTimeNewNode,sEndTimeNewNode;
@@ -293,6 +335,7 @@ void SaveToRepository(u8* u8LedTypeParameter,u8* s1Parameter,u8* s2Parameter,u8*
   }
   else
   {
+    DebugPrintf("\n\r");
     DebugPrintf(u8LedTypeParameter);
     DebugPrintf(" is not a Legal color of LED\n\r");
     DebugPrintNumber(UserApp2_sUserLedCommandList.u8ListSize/2+1);
@@ -344,7 +387,21 @@ void SaveToRepository(u8* u8LedTypeParameter,u8* s1Parameter,u8* s2Parameter,u8*
    DebugPrintf(" : ");
     
 }
+/*--------------------------------------------------------------------------------------------------------------------
+Function: CmdLineParser
 
+Description:
+Analyze the input instructions
+such as if there is a"1\r" input or "2\r"
+Requires:
+1.bpChoose1Parameter
+2.bpOutPutCmdLineParameter
+3.au8EnterStringParameter
+...
+11.bpEnterCompletedParameter
+Promises:
+  - 
+*/
 void CmdLineParser(bool *bpChoose1Parameter,bool *bpOutPutCmdLineParameter,u8* au8EnterStringParameter,u8* pu8StrLenParameter,bool* bpCmdisLegalParameter,u8* u8LedTypeParameter,u8* s1Parameter,u8* s2Parameter,u8* au8OnStringParameter,u8* au8OffStringParameter,bool* bpMenuPrintedParameter,bool* bpEnterCompletedParameter)
 {  
   if(G_au8DebugScanfBuffer[G_u8DebugScanfCharCount-1]=='\r')
@@ -372,7 +429,17 @@ void CmdLineParser(bool *bpChoose1Parameter,bool *bpOutPutCmdLineParameter,u8* a
   }
 }
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function: OutPutCmdLineList
 
+Description:
+1.Complete the function of choose'2' to display the contents of the list
+2.We did't use your API,cause we did't find it at first time.....
+Requires:
+1.bpOutPutCmdLineParameter(judge if the output has been done(the '2' function))
+Promises:
+  - 
+*/
 void OutPutCmdLineList(bool *bpOutPutCmdLineParameter)//,LedDisplayListNodeType*psDisplayNormalNodeParameter)
 { 
   static u16 Counter=0;

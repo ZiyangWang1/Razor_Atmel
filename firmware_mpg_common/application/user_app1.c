@@ -218,6 +218,18 @@ static void UserApp1SM_Idle(void)
           G_u8DebugScanfCharCount=0;
         }
       }
+      else if(G_au8DebugScanfBuffer[0]=='3')
+      {
+        if(G_au8DebugScanfBuffer[1]=='\r')
+        {
+          LedDisplayStartList();
+          bMenuPrinted=FALSE;
+          DebugPrintf("\n\rClean complete !\n\r");
+          G_au8DebugScanfBuffer[0]='\0';
+          G_au8DebugScanfBuffer[1]='\0';
+          G_u8DebugScanfCharCount=0;
+        }
+      }
       if(bEnterCompleted==TRUE)
       {
         if(bChoose1==TRUE)
@@ -228,7 +240,7 @@ static void UserApp1SM_Idle(void)
         }
         else if(bChoose2==TRUE)
         {
-          DebugPrintf("Current USER program:\n\r\nLED\tONTIME\t\tOFFTIME\n\r--------------------------------\n\r");
+          DebugPrintf("\n\r\n\rCurrent USER program:\n\r\nLED\tONTIME\t\tOFFTIME\n\r--------------------------------\n\r");
           bOutPutCmdLine=TRUE;
           OutPutCmdLineList(bpOutPutCmdLine);
           bMenuPrinted=FALSE;
@@ -243,7 +255,7 @@ static void UserApp1SM_Idle(void)
     else
     {
       DebugPrintf("****************************************************\n\r");
-      DebugPrintf("LED Programing Interface\n\rPress 1 to program command sequence\n\rPress 2 to show current User program\n\r");
+      DebugPrintf("LED Programing Interface\n\rPress 1 to program command sequence\n\rPress 2 to show current User program\n\rPress 3 to clean User program\n\r");
       DebugPrintf("****************************************************\n\r");
       bMenuPrinted=TRUE;
     }
