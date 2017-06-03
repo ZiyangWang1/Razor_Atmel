@@ -23,26 +23,8 @@ Header file for user_app1.c
 /**********************************************************************************************************************
 Type Definitions
 **********************************************************************************************************************/
-typedef struct
-{
-  LedNumberType eLED;       /* LED to operate on */
-  u32 u32Time;              /* Time of action */
-  bool bOn;                 /* TRUE if this is an ON event */
-  LedRateType eCurrentRate; /* Current rate for this LED */
-} LedCommandType;
+#include <user_app2.h>
 
-typedef struct
-{
-  LedCommandType eCommand;  /* Command information */
-  void* psNextNode;         /* Pointer to next command node */
-} LedDisplayListNodeType;
-
-typedef struct
-{
-  u8 u8ListSize;                             /* Total size of the list */
-  u32 u32ListEndTime;                        /* Last time of an event in the list */
-  LedDisplayListNodeType* psFirstCommand;    /* Pointer to the first command in the list */
-} LedDisplayListHeadType;
 
 /**********************************************************************************************************************
 Constants / Definitions
@@ -56,8 +38,7 @@ Function Declarations
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Public functions                                                                                                   */
 /*--------------------------------------------------------------------------------------------------------------------*/
-
-
+u32 pow(u8 b,u8 power);
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Protected functions                                                                                                */
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -68,7 +49,6 @@ void UserApp1RunActiveState(void);
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
-void OutPutCmdLineList(bool* pbOutputFlag,LedDisplayListNodeType** ppsPresent);
 
 
 /***********************************************************************************************************************

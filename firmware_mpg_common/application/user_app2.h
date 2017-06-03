@@ -14,6 +14,32 @@ Type Definitions
 **********************************************************************************************************************/
 typedef enum {DEMO_LIST, USER_LIST} LedDisplayListNameType;
 
+typedef struct
+{
+  LedNumberType eLED;       /* LED to operate on */
+  u32 u32Time;              /* Time of action */
+  bool bOn;                 /* TRUE if this is an ON event */
+  LedRateType eCurrentRate; /* Current rate for this LED */
+} LedCommandType;
+
+typedef struct
+{
+  LedCommandType eCommand;  /* Command information */
+  void* psNextNode;         /* Pointer to next command node */
+} LedDisplayListNodeType;
+
+typedef struct
+{
+  u8 u8ListSize;                             /* Total size of the list */
+  u32 u32ListEndTime;                        /* Last time of an event in the list */
+  LedDisplayListNodeType* psFirstCommand;    /* Pointer to the first command in the list */
+} LedDisplayListHeadType;
+
+typedef struct
+{
+  u8 aCmdRepository[DEBUG_SCANF_BUFFER_SIZE];
+  void* psNextNode;
+}LEDRepositoryListType;
 
 
 /**********************************************************************************************************************
@@ -59,7 +85,10 @@ void UserApp2RunActiveState(void);
 void AllLedsOff(void);
 void LoadLcdScreen(void);
 void ResetListFades(LedDisplayListNodeType* psTargetList_);
-
+void CmdLineParser(bool *bpChoose1Parameter,bool *bpOutPutCmdLineParameter,u8* au8EnterStringParameter,u8* pu8StrLenParameter,bool* bpCmdisLegalParameter,u8* u8LedTypeParameter,u8* s1Parameter,u8* s2Parameter,u8* au8OnStringParameter,u8* au8OffStringParameter,bool* bpMenuPrintedParameter,bool* bpEnterCompletedParameter);
+void OutPutCmdLineList(bool *bpOutPutCmdLineParameter);//,LedDisplayListNodeType* psDisplayNormalNodeParameter);
+void SaveToRepository(u8* u8LedTypeParameter,u8* s1Parameter,u8* s2Parameter,u8* au8OnStringParameter,u8* au8OffStringParameter,u8* pu8StrLenParameter);
+void Check_and_Cutout(u8* au8EnterStringParameter,u8* pu8StrLenParameter,bool* bpCmdisLegalParameter,u8* u8LedTypeParameter,u8* ps1Parameter,u8* ps2Parameter,u8* au8OnStringParameter,u8* au8OffStringParameter);
 
 /***********************************************************************************************************************
 State Machine Declarations
