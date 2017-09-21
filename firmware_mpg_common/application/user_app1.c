@@ -42,7 +42,7 @@ All Global variable names shall start with "G_UserApp1"
 ***********************************************************************************************************************/
 /* New variables */
 volatile u32 G_u32UserApp1Flags;                       /* Global state flags */
-
+static bool bChangeFinished=FALSE;
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Existing variables (defined in other files -- should all contain the "extern" keyword) */
@@ -87,11 +87,20 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
- 
+ LedOff(WHITE);
+ LedOff(PURPLE);
+ LedOff(BLUE);
+ LedOff(CYAN);
+ LedOff(GREEN);
+ LedOff(YELLOW);
+ LedOff(ORANGE);
+ LedOff(RED);
+ LedOff(WHITE);
+
   /* If good initialization, set state to Idle */
   if( 1 )
   {
-    UserApp1_StateMachine = UserApp1SM_Idle;
+    UserApp1_StateMachine = UserApp1SM_State1;
   }
   else
   {
@@ -134,9 +143,110 @@ State Machine Function Definitions
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ??? */
+
+static void UserApp1SM_State1(void)
+{
+  static bool bBufferLocation=FALSE;
+  static u8 au8Buffer[2]={0,0};
+  
+  /* Get input */
+  if(DebugScanf(&au8Buffer[(u8)bBufferLocation])==1)
+  {
+    bBufferLocation=!bBufferLocation;
+  }
+  
+  if(!bChangeFinished) /* Check if change finished */
+  {
+    DebugPrintf("Entering state 1\n\r");
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,"STATE 1");
+    LedOff(GREEN);
+    LedOff(YELLOW);
+    LedOff(ORANGE);
+    LedOff(RED);
+    LedOff(LCD_RED);
+    LedOff(LCD_GREEN);
+    LedOn(WHITE);
+    LedOn(PURPLE);
+    LedOn(BLUE);
+    LedOn(CYAN);
+    LedPWM(LCD_RED,LED_PWM_35);
+    LedPWM(LCD_BLUE,LED_PWM_65);
+    PWMAudioOff(BUZZER1);
+    bChangeFinished=TRUE;
+  }
+  
+  /* Check '2' is entered or button 2 is pressed */
+  if((au8Buffer[(u8)!bBufferLocation]=='\r'&&au8Buffer[(u8)bBufferLocation]=='2')||WasButtonPressed(BUTTON2))
+  {
+    au8Buffer[(u8)!bBufferLocation]=0;  /* Clean buffer */
+    ButtonAcknowledge(BUTTON2);
+    UserApp1_StateMachine = UserApp1SM_State2;
+    bChangeFinished=FALSE;
+  }
+  
+}  /* end UserApp1SM_State1() */
+
+static void UserApp1SM_State2(void)
+{
+  static bool bBufferLocation=FALSE;
+  static u8 au8Buffer[2]={0,0};
+  static u16 u16Counter=0;
+  
+  /* Get input */
+  if(DebugScanf(&au8Buffer[(u8)bBufferLocation])==1)
+  {
+    bBufferLocation=!bBufferLocation;
+  }
+  
+  if(!bChangeFinished) /* Check if change finished */
+  {
+    DebugPrintf("Entering state 2\n\r");
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,"STATE 2");
+    LedOff(WHITE);
+    LedOff(PURPLE);
+    LedOff(BLUE);
+    LedOff(CYAN);
+    LedOff(LCD_RED);
+    LedOff(LCD_BLUE);
+    LedBlink(GREEN,LED_1HZ);
+    LedBlink(YELLOW,LED_2HZ);
+    LedBlink(ORANGE,LED_4HZ);
+    LedBlink(RED,LED_8HZ);
+    LedPWM(LCD_RED,LED_PWM_65);
+    LedPWM(LCD_GREEN,LED_PWM_35);
+    PWMAudioSetFrequency(BUZZER1,200);
+    bChangeFinished=TRUE;
+  }
+  
+  if(u16Counter==100)
+  {
+    PWMAudioOff(BUZZER1);
+  }
+  
+  if(u16Counter==1000)
+  {
+    PWMAudioOn(BUZZER1);
+    u16Counter=0;
+  }
+  
+  u16Counter++;
+  
+  /* Check '1' is entered or button 1 is pressed */
+  if((au8Buffer[(u8)!bBufferLocation]=='\r'&&au8Buffer[(u8)bBufferLocation]=='1')||WasButtonPressed(BUTTON1))
+  {
+    au8Buffer[(u8)!bBufferLocation]=0;  /* Clean buffer */
+    ButtonAcknowledge(BUTTON1);
+    UserApp1_StateMachine = UserApp1SM_State1;
+    bChangeFinished=FALSE;
+  }
+  
+}  /* end UserApp1SM_State2() */
+
 static void UserApp1SM_Idle(void)
 {
-
+  
 } /* end UserApp1SM_Idle() */
     
 #if 0
