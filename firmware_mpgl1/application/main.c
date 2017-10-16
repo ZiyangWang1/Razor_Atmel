@@ -67,7 +67,7 @@ void main(void)
   SdCardInitialize();
 
   /* Application initialization */
-  BoardTestInitialize();
+  //BoardTestInitialize();
   UserAppInitialize();
   
   /* Exit initialization */
@@ -92,7 +92,7 @@ void main(void)
     SdCardRunActiveState();
 
     /* Applications */
-    BoardTestRunActiveState();
+    //BoardTestRunActiveState();
     UserAppRunActiveState();
     
     /* System sleep*/

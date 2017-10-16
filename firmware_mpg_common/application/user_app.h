@@ -28,6 +28,25 @@ Type Definitions
 /**********************************************************************************************************************
 Constants / Definitions
 **********************************************************************************************************************/
+/* UserApp ANT radio settings */
+#define	ANT_SERIAL_LO_USERAPP			          (u8)0x34
+#define ANT_SERIAL_HI_USERAPP			          (u8)0x12
+#define	ANT_DEVICE_TYPE_USERAPP					    DEVICE_TYPE_BOARDTEST
+#define	ANT_TRANSMISSION_TYPE_USERAPP		    (u8)0x01
+
+/* Default channel configuration parameters */
+#define ANT_CHANNEL_USERAPP                 (u8)0
+#define ANT_CHANNEL_TYPE_USERAPP            CHANNEL_TYPE_MASTER
+#define ANT_NETWORK_USERAPP                 (u8)0
+
+#define ANT_CHANNEL_PERIOD_DEC_USERAPP      (u16)8192
+#define ANT_CHANNEL_PERIOD_HEX_USERAPP      (u16)0x2000
+#define ANT_CHANNEL_PERIOD_HI_USERAPP		    (u8)0x20
+#define ANT_CHANNEL_PERIOD_LO_USERAPP		    (u8)0x00
+
+#define ANT_FREQUENCY_USERAPP						    (50)
+#define ANT_TX_POWER_USERAPP					  	  RADIO_TX_POWER_0DBM
+
 
 
 /**********************************************************************************************************************
