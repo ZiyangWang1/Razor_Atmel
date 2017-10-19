@@ -136,6 +136,40 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  static u8 au8Buffer[2] = {0,0};
+  static u16 u16Frequence = 0;
+  static u16 u16Counter = 0;
+  
+  if((bool)DebugScanf(au8Buffer))
+  {
+    PWMAudioOff(BUZZER1);
+    switch (au8Buffer[0])
+    {
+    case '0' : u16Frequence = G4;break;
+    case '.' : u16Frequence = A4;break;
+    case '\r' : u16Frequence = B4;break;
+    case '1' : u16Frequence = C5;break;
+    case '2' : u16Frequence = D5;break;
+    case '3' : u16Frequence = E5;break;
+    case '4' : u16Frequence = F5;break;
+    case '5' : u16Frequence = G5;break;
+    case '6' : u16Frequence = A5;break;
+    case '+' : u16Frequence = B5;break;
+    default : ;
+    }
+    PWMAudioSetFrequency(BUZZER1,u16Frequence);
+    PWMAudioOn(BUZZER1);
+    u16Counter = 0;
+  }
+  else
+  {
+    if(u16Counter == 500)
+    {
+      u16Counter = 0;
+      PWMAudioOff(BUZZER1);
+    }
+    u16Counter++;
+  }
 
 } /* end UserApp1SM_Idle() */
     
