@@ -87,6 +87,11 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+  /* Enable PIO and output of PA11 and PB03 */
+  AT91C_BASE_PIOA->PIO_PER = PA_11_BLADE_UPIMO;
+  AT91C_BASE_PIOB->PIO_PER = PB_03_BLADE_AN0;
+  AT91C_BASE_PIOA->PIO_OER = PA_11_BLADE_UPIMO;
+  AT91C_BASE_PIOB->PIO_OER = PB_03_BLADE_AN0;
  
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -136,7 +141,77 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+                                        /*OLD MEMORY */                                                                                                                                                         /*GG*/                                                                                                                                                                                                                                                                          /* MLH*/
+  static u16 au16NoteBuzzer1[] = /*{NO,C6,D6,E6,G6,D6,A5,B5,C6,D6,E6,F6,E6,NO,E6,D6,E6,G6,D6,A5,B5,C6,B5,A5,G5,E5,NO,C6,D6,E6,G6,D6,A5,B5,C6,D6,E6,F6,E6,NO,E6,C6,C6,E6,D6,B5,C6,B5,A5,NO}*/ /*{NO,D4,G4,G4,G4,G4,D4,E4,F4,G4,G4,NO,B4,G4,A4,B4,D5,D5,B4,B4,G4,B4,D5,B4,A4,A4,NO,E5,D5,A4,B4,D5,B4,NO,D5,B4,A4,B4,G4,B4,NO,D4,E4,G4,G4,B4,B4,D5,D5,A4,A4,A4,E4,A4,D4,G4,G4,B4,B4,D5,NO,G4,B4,D5,D5,E5,D5,B4,G4,D5,B4,NO,G4,NO,D4,G4,B4,G4,D5,B4,NO,G4,NO,D4,G4,D4,G4,D4,G4,G4,NO}*/{F4,NO,F4,A4,B4,D5,D5,B4,A4,NO,A4,B4,A4,NO,F4,NO,F4,A4,B4,D5,NO,D5,B4,A4,NO,A4,B4,A4,NO,A4,NO,A4,F4,A4,B4,NO,B4,A4,NO,F4,E4,F4,A4,F4,E4,D4,NO,D4,E4,D4,NO,F4,E4,D4,F4,E4,F4,A4,B4,D5,A4,NO,E4,F4,A4,E4,F4,D4,B3,A3,NO,B3,D4,E4,F4,D4,E4,D4,B3,A3,NO,NO,NO};
+  //static u16 au16NoteBuzzer2[] = {NO,A4,NO,G4,NO,F4,NO,C4,NO,A4,NO,G4,NO,F4,G4,C5,NO,A4,NO,G4,NO,F4,NO,C4,NO,D4,NO,E4,NO,F4,NO};
+  static u16 au16LengthBuzzer1[] = /*{FN,EN,EN,EN,EN,QN,EN,EN,EN,EN,EN,EN,QN,QN,EN,EN,EN,EN,QN,EN,EN,EN,EN,EN,EN,QN,QN,EN,EN,EN,EN,QN,EN,EN,EN,EN,EN,EN,QN,QN,EN,EN,EN,EN,QN,QN,EN,EN,FN,QN*3}*//*{EN,EN,QN+EN,EN,EN+SN,SN,EN,SN,SN,QN,QN,EN,EN,EN,SN,SN,QN,QN,EN+SN,SN,EN+SN,SN,EN+SN,SN,QN,QN,QN,QN,QN,QN,QN,EN,EN,EN,EN,EN,SN,SN,QN,QN,QN,EN+SN,SN,EN,EN,EN+SN,SN,EN,EN,EN,SN,SN,QN,QN+EN,EN,QN+EN,EN,QN+EN,EN,QN,QN,EN+SN,SN,EN,EN,QN,QN,EN+SN,SN,QN,EN,EN,EN,EN,QN,QN,EN+SN,SN,QN,EN,EN,EN,EN,QN,QN,QN,QN,QN,QN,QN,QN}*/{QN,QN,QN,EN,EN,EN,EN,EN,EN,EN,EN,EN,QN,QN,EN,EN,EN,EN,EN,SN,SN,EN,EN,EN,EN,EN,EN,QN,QN,QN,QN,QN,EN,EN,QN,EN,EN,QN,QN,QN,EN,EN,QN,EN,EN,EN,EN,EN,EN,QN,QN,EN,EN,EN,EN,QN+EN,EN,QN,EN,EN,QN,QN,QN,EN,EN,EN,EN,EN,EN,QN,QN,QN,QN,QN+EN,EN,EN,EN,EN,EN,QN,QN,QN,QN};
+  //static u16 au16LengthBuzzer2[] = {FN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN*5,QN*3};
+  static u16 u16Counter1 = 0;
+  //static u16 u16Counter2 = 0;
+  static u16 u16NoteCount1 = 0;
+  //static u16 u16NoteCount2 = 0;
+  
+  u16Counter1++;
+  //u16Counter2++;
+  
+  /* Check if the button is pressed */
+  if(AT91C_BASE_PIOA->PIO_PDSR & PA_15_BLADE_SCK)
+  {
+    /* Turn off buzzers and LEDs when not pressed */
+    //AT91C_BASE_PIOB->PIO_CODR = 0x00100000;
+    PWMAudioOff(BUZZER1);
+    PWMAudioOff(BUZZER2);
+    AT91C_BASE_PIOA->PIO_CODR = PA_11_BLADE_UPIMO;
+    AT91C_BASE_PIOB->PIO_CODR = PB_03_BLADE_AN0;
+  }
+  
+  else
+  {
+    /* Turn on buzzers and blink LEDs when pressed */
+    //AT91C_BASE_PIOB->PIO_SODR = 0x00100000;
+    PWMAudioOn(BUZZER1);
+    PWMAudioOn(BUZZER2);
+    
+    /* Change LEDs when change notes */
+    if(u16Counter1 == au16LengthBuzzer1[u16NoteCount1] / 2)
+    {
+      AT91C_BASE_PIOA->PIO_CODR = PA_11_BLADE_UPIMO;
+      AT91C_BASE_PIOB->PIO_SODR = PB_03_BLADE_AN0;
+    }
 
+    if(u16Counter1 == au16LengthBuzzer1[u16NoteCount1])
+    {
+      AT91C_BASE_PIOA->PIO_SODR = PA_11_BLADE_UPIMO;
+      AT91C_BASE_PIOB->PIO_CODR = PB_03_BLADE_AN0;
+    }
+  }
+  
+  /* Change notes when reach the notes' length */
+  if(u16Counter1 == au16LengthBuzzer1[u16NoteCount1])
+  {
+    u16Counter1 = 0;
+    u16NoteCount1++;
+    PWMAudioSetFrequency(BUZZER1,au16NoteBuzzer1[u16NoteCount1]);
+  }
+  
+  /*if(u16Counter2 == au16LengthBuzzer2[u16NoteCount2])
+  {
+    u16Counter2 = 0;
+    u16NoteCount2++;
+    PWMAudioSetFrequency(BUZZER2,au16NoteBuzzer2[u16NoteCount2]);
+  }*/
+  
+  /* Cycle the music */
+  if(u16NoteCount1 == (sizeof(au16LengthBuzzer1)/2-1))
+  {
+    u16NoteCount1 = 0;
+  }
+  
+  /*if(u16NoteCount2 == (sizeof(au16LengthBuzzer2)/2-1))
+  {
+    u16NoteCount2 = 0;
+  }*/
+  
 } /* end UserApp1SM_Idle() */
     
 
