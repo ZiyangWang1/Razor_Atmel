@@ -98,6 +98,9 @@ void UserApp1Initialize(void)
 {
   AntAssignChannelInfoType sAntSetupData;
   
+  PWMAudioSetFrequency(BUZZER1,0);
+  PWMAudioOn(BUZZER1); 
+  
   /* Clear screen */
   LCDCommand(LCD_CLEAR_CMD);
   LCDMessage(LINE1_START_ADDR,"Hide and Go Seek!");
@@ -172,13 +175,10 @@ State Machine Function Definitions
 /* Wait for the ANT channel assignment to finish */
 static void UserApp1SM_WaitChannelAssign(void)
 {
-  u8 i;
   /* Check if the channel assignment is complete */
-  i = AntRadioStatusChannel(ANT_CHANNEL_USERAPP);
   if(AntRadioStatusChannel(ANT_CHANNEL_USERAPP) == ANT_CONFIGURED)
   {
     AntOpenChannelNumber(ANT_CHANNEL_USERAPP);
-    
     /* Set timer and advance states */
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_WaitChannelOpen;
@@ -216,6 +216,7 @@ static void UserApp1SM_Idle(void)
         {
           if(G_au8AntApiCurrentMessageBytes[i] != au8LastAntData[i])
           {
+            
             bGotNewData = TRUE;
             au8LastAntData[i] = G_au8AntApiCurrentMessageBytes[i];
           }
@@ -336,7 +337,7 @@ static void UserApp1SM_WaitChannelOpen(void)
   if( IsTimeUp(&UserApp1_u32Timeout, TIMEOUT_VALUE) )
   {
     AntCloseChannelNumber(ANT_CHANNEL_USERAPP);
-    UserApp1_StateMachine = UserApp1SM_Idle;
+    UserApp1_StateMachine = UserApp1SM_Error;
     
   }
     
@@ -354,6 +355,7 @@ static void UserApp1SM_Seeker(void)
   static u16 u16Count = 9999;
   static bool bDisplayed = FALSE;
   static bool bFindSuccess = FALSE;
+  static u16 u16BuzzerCount = 0;
 
   if(u16Count != 0)
   {
@@ -395,6 +397,8 @@ static void UserApp1SM_Seeker(void)
         //LCDCommand(LCD_CLEAR_CMD);
         //LCDMessage(LINE1_START_ADDR,au8Display);
       
+        u16BuzzerCount++;
+        PWMAudioSetFrequency(BUZZER1,C4);
         switch((s8RSSILevel*(-1)) / 10)
         {
        case 4 :
@@ -407,6 +411,8 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
+            PWMAudioOff(BUZZER1);
+            u16BuzzerCount = 0;
             bFindSuccess = TRUE;
             break;
           }
@@ -420,6 +426,8 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
+            PWMAudioOn(BUZZER1);
+            u16BuzzerCount = 0;
             break;
           }
         case 6:
@@ -432,6 +440,15 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
+            if(u16BuzzerCount == 250)
+            {
+              PWMAudioOn(BUZZER1);
+            }
+            if(u16BuzzerCount > 500)
+            {
+              PWMAudioOff(BUZZER1);
+              u16BuzzerCount = 0;
+            }
             break;
           }
         case 7:
@@ -444,6 +461,15 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
+            if(u16BuzzerCount == 500)
+            {
+              PWMAudioOn(BUZZER1);
+            }
+            if(u16BuzzerCount > 1000)
+            {
+              PWMAudioOff(BUZZER1);
+              u16BuzzerCount = 0;
+            }
             break;
           }
         case 8:
@@ -456,6 +482,15 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
+            if(u16BuzzerCount == 1000)
+            {
+              PWMAudioOn(BUZZER1);
+            }
+            if(u16BuzzerCount > 2000)
+            {
+              PWMAudioOff(BUZZER1);
+              u16BuzzerCount = 0;
+            }
             break;
           }
         case 9:
@@ -468,6 +503,15 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
+            if(u16BuzzerCount == 2000)
+            {
+              PWMAudioOn(BUZZER1);
+            }
+            if(u16BuzzerCount > 4000)
+            {
+              PWMAudioOff(BUZZER1);
+              u16BuzzerCount = 0;
+            }
             break;
           }
         case 10:
@@ -480,6 +524,15 @@ static void UserApp1SM_Seeker(void)
             LedOff(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
+            if(u16BuzzerCount == 4000)
+            {
+              PWMAudioOn(BUZZER1);
+            }
+            if(u16BuzzerCount > 8000)
+            {
+              PWMAudioOff(BUZZER1);
+              u16BuzzerCount = 0;
+            }
             break;
           }
         case 11:
@@ -517,6 +570,7 @@ static void UserApp1SM_Seeker(void)
           UserApp1_StateMachine = UserApp1SM_Found;
           bFindSuccess = FALSE;
           u16Count = 9999;
+          bDisplayed = FALSE;
         }
       }
     }
@@ -663,8 +717,60 @@ static void UserApp1SM_Found(void)
 {
   static u16 u16Count = 0;
   static bool bCongratulated = FALSE;
+  static u16 au16NoteBuzzer1[] = {NO,C6,D6,E6,G6,D6,A5,B5,C6,D6,E6,F6,E6,NO,E6,D6,E6,G6,D6,A5,B5,C6,B5,A5,G5,E5,NO,C6,D6,E6,G6,D6,A5,B5,C6,D6,E6,F6,E6,NO,E6,C6,C6,E6,D6,B5,C6,B5,A5,NO,
+                                     C5,D5,E5,G5,D5,A4,B4,C5,D5,E5,F5,E5,NO,E5,D5,E5,G5,D5,A4,B4,C5,B4,A4,G4,E4,NO,C5,D5,E5,G5,D5,A4,B4,C5,D5,E5,F5,E5,NO,E5,C5,C5,E5,D5,B4,C5,B4,A4,NO};
+  static u16 au16NoteBuzzer2[] = {NO,A4,NO,G4,NO,F4,NO,C4,NO,A4,NO,G4,NO,F4,G4,C5,NO,A4,NO,G4,NO,F4,NO,C4,NO,D4,NO,E4,NO,F4,NO};
+  static u16 au16LengthBuzzer1[] = {FN,EN,EN,EN,EN,QN,EN,EN,EN,EN,EN,EN,QN,QN,EN,EN,EN,EN,QN,EN,EN,EN,EN,EN,EN,QN,QN,EN,EN,EN,EN,QN,EN,EN,EN,EN,EN,EN,QN,QN,EN,EN,EN,EN,QN,QN,EN,EN,FN,QN*3,
+                                       EN,EN,EN,EN,QN,EN,EN,EN,EN,EN,EN,QN,QN,EN,EN,EN,EN,QN,EN,EN,EN,EN,EN,EN,QN,QN,EN,EN,EN,EN,QN,EN,EN,EN,EN,EN,EN,QN,QN,EN,EN,EN,EN,QN,QN,EN,EN,QN,QN*2};
+  static u16 au16LengthBuzzer2[] = {FN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN,QN*5,QN*3};
+  static u16 u16Counter1 = 0;
+  static u16 u16Counter2 = 0;
+  static u16 u16NoteCount1 = 0;
+  static u16 u16NoteCount2 = 0;
+  
+  u16Counter1++;
+  u16Counter2++;
+  
+  if(u16Counter1 == au16LengthBuzzer1[u16NoteCount1])
+  {
+    u16Counter1 = 0;
+    u16NoteCount1++;
+    PWMAudioSetFrequency(BUZZER1,au16NoteBuzzer1[u16NoteCount1]);
+  }
+  
+  if(u16Counter2 == au16LengthBuzzer2[u16NoteCount2])
+  {
+    u16Counter2 = 0;
+    u16NoteCount2++;
+    PWMAudioSetFrequency(BUZZER2,au16NoteBuzzer2[u16NoteCount2]);
+  }
+  
+  if(u16NoteCount1 == (sizeof(au16LengthBuzzer1)/2-1))
+  {
+    u16NoteCount1 = 0;
+  }
+  
+  if(u16NoteCount2 == (sizeof(au16LengthBuzzer2)/2-1))
+  {
+    u16NoteCount2 = 0;
+  }
+  
   
   u16Count++;
+  if( AntReadAppMessageBuffer() )
+  {
+     /* New data message: check what it is */
+    if(G_eAntApiCurrentMessageClass == ANT_DATA)
+    {
+      for(u8 i = 0; i < ANT_APPLICATION_MESSAGE_BYTES; i++)
+      {
+        if(G_au8AntApiCurrentMessageBytes[i] != au8LastAntData[i])
+        {
+          au8LastAntData[i] = G_au8AntApiCurrentMessageBytes[i];
+        }
+      }
+    }
+  }
   if(!bCongratulated)
   {
     bCongratulated = TRUE;
@@ -688,12 +794,15 @@ static void UserApp1SM_Found(void)
     LedOff(YELLOW);
     LedOff(ORANGE);
     LedOff(RED);
+    PWMAudioSetFrequency(BUZZER1,0);
+    
     
     AntCloseChannelNumber(ANT_CHANNEL_USERAPP);
     
     /* Set timer and advance states */
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_WaitChannelClose;
+    bCongratulated = FALSE;
   }
 
 }
