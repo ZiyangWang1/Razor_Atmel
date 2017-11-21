@@ -101,12 +101,12 @@ void UserApp1Initialize(void)
   PWMAudioSetFrequency(BUZZER1,0);
   PWMAudioOn(BUZZER1); 
   
-  /* Clear screen */
+  /* Clear screen and show start words*/
   LCDCommand(LCD_CLEAR_CMD);
   LCDMessage(LINE1_START_ADDR,"Hide and Go Seek!");
   LCDMessage(LINE2_START_ADDR,"Press B0 to Start");
 
- /* Configure ANT for this application */
+ /* Configure ANT as a slave */
   sAntSetupData.AntChannel          = ANT_CHANNEL_USERAPP;
   sAntSetupData.AntChannelType      = ANT_CHANNEL_TYPE_USERAPP;
   sAntSetupData.AntChannelPeriodLo  = ANT_CHANNEL_PERIOD_LO_USERAPP;
@@ -195,7 +195,7 @@ static void UserApp1SM_WaitChannelAssign(void)
 
 
   /*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for a message to be queued */
+/* Wait for pared or B0 pressed, and when the game over, reset the divice as a slave */
 static void UserApp1SM_Idle(void)
 {
   static bool bReseted = TRUE;
@@ -205,8 +205,10 @@ static void UserApp1SM_Idle(void)
   static bool bDisplay = FALSE;
   static bool bGotNewData = FALSE;
   
+  /* Check if need to be reset */
   if(bReseted)
   {
+    /* Check if got new data */
     if( AntReadAppMessageBuffer() )
     {
       if(G_eAntApiCurrentMessageClass == ANT_DATA)
@@ -216,12 +218,12 @@ static void UserApp1SM_Idle(void)
         {
           if(G_au8AntApiCurrentMessageBytes[i] != au8LastAntData[i])
           {
-            
             bGotNewData = TRUE;
             au8LastAntData[i] = G_au8AntApiCurrentMessageBytes[i];
           }
         }
       }
+      /* When got new data, meaning pared, go to the seeker state */
       if(bGotNewData)
       {
         bReseted = FALSE;
@@ -229,6 +231,7 @@ static void UserApp1SM_Idle(void)
       }
     }
     
+    /* When B0 is pressed, reconfigured as a master ,and go to hide state */
     if(WasButtonPressed(BUTTON0))
     {
       if(!bChannelClosed)
@@ -280,6 +283,7 @@ static void UserApp1SM_Idle(void)
   }
   else
   {
+    /* When need to be reset, configure as a slave and redisplay the start words */
     if(!bDisplay)
     {
       LCDCommand(LCD_CLEAR_CMD);
@@ -344,7 +348,8 @@ static void UserApp1SM_WaitChannelOpen(void)
 } /* end UserApp1SM_WaitChannelOpen() */
 
 
-
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for found */
 static void UserApp1SM_Seeker(void)
 {
   static u8 au8TestMessage[] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -352,11 +357,11 @@ static void UserApp1SM_Seeker(void)
   static u8 au8Display1[] = "Seeker       ";
   static u8 au8Display2[] = "Here I come!";
   static u8 au8Display3[] = "Ready or not";
-  static u16 u16Count = 9999;
+  static u16 u16Count = 3999;
   static bool bDisplayed = FALSE;
   static bool bFindSuccess = FALSE;
-  static u16 u16BuzzerCount = 0;
 
+  /* Display countdown */
   if(u16Count != 0)
   {
     u16Count--;
@@ -396,9 +401,8 @@ static void UserApp1SM_Seeker(void)
         //au8Display[3] = ((s8RSSILevel*(-1)) % 10) / 1 + '0';
         //LCDCommand(LCD_CLEAR_CMD);
         //LCDMessage(LINE1_START_ADDR,au8Display);
-      
-        u16BuzzerCount++;
-        PWMAudioSetFrequency(BUZZER1,C4);
+        
+        /* Turn on LEDs according to RSSIlevel */
         switch((s8RSSILevel*(-1)) / 10)
         {
        case 4 :
@@ -411,8 +415,6 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
-            PWMAudioOff(BUZZER1);
-            u16BuzzerCount = 0;
             bFindSuccess = TRUE;
             break;
           }
@@ -426,8 +428,6 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
-            PWMAudioOn(BUZZER1);
-            u16BuzzerCount = 0;
             break;
           }
         case 6:
@@ -440,15 +440,6 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
-            if(u16BuzzerCount == 250)
-            {
-              PWMAudioOn(BUZZER1);
-            }
-            if(u16BuzzerCount > 500)
-            {
-              PWMAudioOff(BUZZER1);
-              u16BuzzerCount = 0;
-            }
             break;
           }
         case 7:
@@ -461,15 +452,6 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
-            if(u16BuzzerCount == 500)
-            {
-              PWMAudioOn(BUZZER1);
-            }
-            if(u16BuzzerCount > 1000)
-            {
-              PWMAudioOff(BUZZER1);
-              u16BuzzerCount = 0;
-            }
             break;
           }
         case 8:
@@ -482,15 +464,6 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
-            if(u16BuzzerCount == 1000)
-            {
-              PWMAudioOn(BUZZER1);
-            }
-            if(u16BuzzerCount > 2000)
-            {
-              PWMAudioOff(BUZZER1);
-              u16BuzzerCount = 0;
-            }
             break;
           }
         case 9:
@@ -503,15 +476,6 @@ static void UserApp1SM_Seeker(void)
             LedOn(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
-            if(u16BuzzerCount == 2000)
-            {
-              PWMAudioOn(BUZZER1);
-            }
-            if(u16BuzzerCount > 4000)
-            {
-              PWMAudioOff(BUZZER1);
-              u16BuzzerCount = 0;
-            }
             break;
           }
         case 10:
@@ -524,15 +488,6 @@ static void UserApp1SM_Seeker(void)
             LedOff(YELLOW);
             LedOn(ORANGE);
             LedOn(RED);
-            if(u16BuzzerCount == 4000)
-            {
-              PWMAudioOn(BUZZER1);
-            }
-            if(u16BuzzerCount > 8000)
-            {
-              PWMAudioOff(BUZZER1);
-              u16BuzzerCount = 0;
-            }
             break;
           }
         case 11:
@@ -560,6 +515,8 @@ static void UserApp1SM_Seeker(void)
           }
         }
       }
+      
+      /* Send a message to master when RSSILevel reach the top, then go to found state */
       if(G_eAntApiCurrentMessageClass == ANT_DATA)
       {
         if(bFindSuccess)
@@ -569,15 +526,17 @@ static void UserApp1SM_Seeker(void)
           AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, au8TestMessage);
           UserApp1_StateMachine = UserApp1SM_Found;
           bFindSuccess = FALSE;
-          u16Count = 9999;
+          u16Count = 3999;
           bDisplayed = FALSE;
         }
       }
     }
   } /* end AntReadAppMessageBuffer() */
       
-} /* end UserApp1SM_ChannelOpen() */
+} /* end UserApp1SM_Seeker() */
 
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for found */
 static void UserApp1SM_Hider(void)
 {
   static u8 au8TestMessage[] = {0, 0, 0, 0, 0xA5, 0, 0, 0};
@@ -592,7 +551,7 @@ static void UserApp1SM_Hider(void)
   
   if( AntReadAppMessageBuffer() )
   {
-     /* New message from ANT task: check what it is */
+     /* New message from seeker, meaning found, go to found state */
     if(G_eAntApiCurrentMessageClass == ANT_DATA)
     {
       LCDCommand(LCD_CLEAR_CMD);
@@ -616,7 +575,7 @@ static void UserApp1SM_Hider(void)
     
   } /* end AntReadData() */
       
-}
+}/* end UserApp1SM_Hider() */
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
@@ -637,11 +596,13 @@ static void UserApp1SM_WaitChannelClose(void)
     
 } /* end UserApp1SM_WaitChannelClose() */
 
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for channel reconfigure to master */
 static void UserApp1SM_ReconfigToMaster(void)
 {
   AntAssignChannelInfoType sAntSetupData;
   
-  /* Configure ANT for this application */
+  /* Configure ANT as a master */
   sAntSetupData.AntChannel          = ANT_CHANNEL_USERAPP;
   sAntSetupData.AntChannelType      = CHANNEL_TYPE_MASTER;
   sAntSetupData.AntChannelPeriodLo  = ANT_CHANNEL_PERIOD_LO_USERAPP;
@@ -660,7 +621,7 @@ static void UserApp1SM_ReconfigToMaster(void)
     sAntSetupData.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
   }
     
-  /* If good initialization, set state to Idle */
+  /* If good, set state to WaitChannelAssign */
   if( AntAssignChannel(&sAntSetupData) )
   {
     /* Channel assignment is queued so start timer */
@@ -673,13 +634,16 @@ static void UserApp1SM_ReconfigToMaster(void)
     UserApp1_StateMachine = UserApp1SM_Error;
   }
 
-}
+}/* end UserApp1SM_ReconfigToMaster() */
 
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for channel reconfigure to slave */
 static void UserApp1SM_ReconfigToSlave(void)
 {
   AntAssignChannelInfoType sAntSetupData;
   
-  /* Configure ANT for this application */
+  /* Configure ANT as a slave */
   sAntSetupData.AntChannel          = ANT_CHANNEL_USERAPP;
   sAntSetupData.AntChannelType      = CHANNEL_TYPE_SLAVE;
   sAntSetupData.AntChannelPeriodLo  = ANT_CHANNEL_PERIOD_LO_USERAPP;
@@ -698,7 +662,7 @@ static void UserApp1SM_ReconfigToSlave(void)
     sAntSetupData.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
   }
     
-  /* If good initialization, set state to Idle */
+  /* If good, set state to WaitChannelAssign */
   if( AntAssignChannel(&sAntSetupData) )
   {
     /* Channel assignment is queued so start timer */
@@ -711,8 +675,11 @@ static void UserApp1SM_ReconfigToSlave(void)
     UserApp1_StateMachine = UserApp1SM_Error;
   }
 
-}
+}/* end UserApp1SM_ReconfigToSlave() */
 
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for congratulation finished */
 static void UserApp1SM_Found(void)
 {
   static u16 u16Count = 0;
@@ -728,6 +695,7 @@ static void UserApp1SM_Found(void)
   static u16 u16NoteCount1 = 0;
   static u16 u16NoteCount2 = 0;
   
+  /* Turn on buzzers to make a siren sound */
   u16Counter1++;
   u16Counter2++;
   
@@ -755,7 +723,7 @@ static void UserApp1SM_Found(void)
     u16NoteCount2 = 0;
   }
   
-  
+  /* Clean the message buffer */
   u16Count++;
   if( AntReadAppMessageBuffer() )
   {
@@ -771,6 +739,8 @@ static void UserApp1SM_Found(void)
       }
     }
   }
+  
+  /* Blink the LEDs to congratulate */
   if(!bCongratulated)
   {
     bCongratulated = TRUE;
@@ -783,6 +753,8 @@ static void UserApp1SM_Found(void)
     LedBlink(ORANGE,LED_4HZ);
     LedBlink(RED,LED_4HZ);
   }
+  
+  /* Congratulate for 10s, then turn off LEDs and buzzers, going to WaitChannelClose state */
   if(u16Count == 10000)
   {
     u16Count = 0;
@@ -805,8 +777,11 @@ static void UserApp1SM_Found(void)
     bCongratulated = FALSE;
   }
 
-}
+}/* end UserApp1SM_Found() */
 
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for channel unassigned */
 static void UserApp1SM_WaitChannelUnassign(void)
 {
   if(AntRadioStatusChannel(ANT_CHANNEL_USERAPP) == ANT_UNCONFIGURED)
@@ -819,7 +794,7 @@ static void UserApp1SM_WaitChannelUnassign(void)
   {
     UserApp1_StateMachine = UserApp1SM_Error;
   }
-}
+}/* end UserApp1SM_WaitChannelUnassign() */
 
 
 
