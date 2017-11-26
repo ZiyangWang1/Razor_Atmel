@@ -65,9 +65,13 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;              /* The state machine function pointer */
 static u32 UserApp1_u32Timeout;                        /* Timeout counter used across states */
 
-static AntAssignChannelInfoType UserApp1_sChannelInfo; /* ANT setup parameters */
+static AntAssignChannelInfoType UserApp1_CHANNEL1_sChannelInfo; /* ANT setup parameters */
+static AntAssignChannelInfoType UserApp1_CHANNEL2_sChannelInfo; /* ANT setup parameters */
 
-static u8 UserApp1_au8MessageFail[] = "\n\r***ANT channel setup failed***\n\n\r";
+static u8 UserApp1_au8MessageFail1[] = "\n\r***ANT channel 1 setup failed***\n\n\r";
+static u8 UserApp1_au8MessageFail2[] = "\n\r***ANT channel 2 setup failed***\n\n\r";
+
+
 
 /**********************************************************************************************************************
 Function Definitions
@@ -95,41 +99,59 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  u8 au8WelcomeMessage[] = "ANT Master";
-
-  /* Write a weclome message on the LCD */
-#if EIE1
-  /* Set a message up on the LCD. Delay is required to let the clear command send. */
+  u8 au8ANTPlusNetworkKey[] = {0xB9,0xA5,0x21,0xFB,0xBD,0x72,0xC3,0x45};
+  
   LCDCommand(LCD_CLEAR_CMD);
-  for(u32 i = 0; i < 10000; i++);
-  LCDMessage(LINE1_START_ADDR, au8WelcomeMessage);
-#endif /* EIE1 */
-  
-#if 0 // untested for MPG2
-  
-#endif /* MPG2 */
+  LedOff(WHITE);
+  LedOff(PURPLE);
+  LedOff(BLUE);
+  LedOff(CYAN);
+  LedOff(GREEN);
+  LedOff(YELLOW);
+  LedOff(ORANGE);
+  LedOff(RED);
 
- /* Configure ANT for this application */
-  UserApp1_sChannelInfo.AntChannel          = ANT_CHANNEL_USERAPP;
-  UserApp1_sChannelInfo.AntChannelType      = ANT_CHANNEL_TYPE_USERAPP;
-  UserApp1_sChannelInfo.AntChannelPeriodLo  = ANT_CHANNEL_PERIOD_LO_USERAPP;
-  UserApp1_sChannelInfo.AntChannelPeriodHi  = ANT_CHANNEL_PERIOD_HI_USERAPP;
+
+ /* Configure Channel 1 for this application */
+  UserApp1_CHANNEL1_sChannelInfo.AntChannel          = ANT_CHANNEL_USERAPP_CHANNEL1;
+  UserApp1_CHANNEL1_sChannelInfo.AntChannelType      = ANT_CHANNEL_TYPE_USERAPP_CHANNEL1;
+  UserApp1_CHANNEL1_sChannelInfo.AntChannelPeriodLo  = ANT_CHANNEL_PERIOD_LO_USERAPP_CHANNEL1;
+  UserApp1_CHANNEL1_sChannelInfo.AntChannelPeriodHi  = ANT_CHANNEL_PERIOD_HI_USERAPP_CHANNEL1;
  
-  UserApp1_sChannelInfo.AntDeviceIdLo       = ANT_DEVICEID_LO_USERAPP;
-  UserApp1_sChannelInfo.AntDeviceIdHi       = ANT_DEVICEID_HI_USERAPP;
-  UserApp1_sChannelInfo.AntDeviceType       = ANT_DEVICE_TYPE_USERAPP;
-  UserApp1_sChannelInfo.AntTransmissionType = ANT_TRANSMISSION_TYPE_USERAPP;
-  UserApp1_sChannelInfo.AntFrequency        = ANT_FREQUENCY_USERAPP;
-  UserApp1_sChannelInfo.AntTxPower          = ANT_TX_POWER_USERAPP;
+  UserApp1_CHANNEL1_sChannelInfo.AntDeviceIdLo       = ANT_DEVICEID_LO_USERAPP_CHANNEL1;
+  UserApp1_CHANNEL1_sChannelInfo.AntDeviceIdHi       = ANT_DEVICEID_HI_USERAPP_CHANNEL1;
+  UserApp1_CHANNEL1_sChannelInfo.AntDeviceType       = ANT_DEVICE_TYPE_USERAPP_CHANNEL1;
+  UserApp1_CHANNEL1_sChannelInfo.AntTransmissionType = ANT_TRANSMISSION_TYPE_USERAPP_CHANNEL1;
+  UserApp1_CHANNEL1_sChannelInfo.AntFrequency        = ANT_FREQUENCY_USERAPP_CHANNEL1;
+  UserApp1_CHANNEL1_sChannelInfo.AntTxPower          = ANT_TX_POWER_USERAPP_CHANNEL1;
 
-  UserApp1_sChannelInfo.AntNetwork = ANT_NETWORK_DEFAULT;
+  UserApp1_CHANNEL1_sChannelInfo.AntNetwork = ANT_NETWORK_DEFAULT;
   for(u8 i = 0; i < ANT_NETWORK_NUMBER_BYTES; i++)
   {
-    UserApp1_sChannelInfo.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
+    UserApp1_CHANNEL1_sChannelInfo.AntNetworkKey[i] = au8ANTPlusNetworkKey[i];
   }
   
-  /* Attempt to queue the ANT channel setup */
-  if( AntAssignChannel(&UserApp1_sChannelInfo) )
+ /* Configure Channel 2 for this application */
+  UserApp1_CHANNEL2_sChannelInfo.AntChannel          = ANT_CHANNEL_USERAPP_CHANNEL2;
+  UserApp1_CHANNEL2_sChannelInfo.AntChannelType      = ANT_CHANNEL_TYPE_USERAPP_CHANNEL2;
+  UserApp1_CHANNEL2_sChannelInfo.AntChannelPeriodLo  = ANT_CHANNEL_PERIOD_LO_USERAPP_CHANNEL2;
+  UserApp1_CHANNEL2_sChannelInfo.AntChannelPeriodHi  = ANT_CHANNEL_PERIOD_HI_USERAPP_CHANNEL2;
+ 
+  UserApp1_CHANNEL2_sChannelInfo.AntDeviceIdLo       = ANT_DEVICEID_LO_USERAPP_CHANNEL2;
+  UserApp1_CHANNEL2_sChannelInfo.AntDeviceIdHi       = ANT_DEVICEID_HI_USERAPP_CHANNEL2;
+  UserApp1_CHANNEL2_sChannelInfo.AntDeviceType       = ANT_DEVICE_TYPE_USERAPP_CHANNEL2;
+  UserApp1_CHANNEL2_sChannelInfo.AntTransmissionType = ANT_TRANSMISSION_TYPE_USERAPP_CHANNEL2;
+  UserApp1_CHANNEL2_sChannelInfo.AntFrequency        = ANT_FREQUENCY_USERAPP_CHANNEL2;
+  UserApp1_CHANNEL2_sChannelInfo.AntTxPower          = ANT_TX_POWER_USERAPP_CHANNEL2;
+
+  UserApp1_CHANNEL2_sChannelInfo.AntNetwork = ANT_NETWORK_DEFAULT;
+  for(u8 i = 0; i < ANT_NETWORK_NUMBER_BYTES; i++)
+  {
+    UserApp1_CHANNEL2_sChannelInfo.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
+  }
+  
+  /* Attempt to queue the ANT channel 1 setup */
+  if( AntAssignChannel(&UserApp1_CHANNEL1_sChannelInfo) )
   {
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_AntChannelAssign;
@@ -137,7 +159,7 @@ void UserApp1Initialize(void)
   else
   {
     /* The task isn't properly initialized, so shut it down and don't run */
-    DebugPrintf(UserApp1_au8MessageFail);
+    DebugPrintf(UserApp1_au8MessageFail1);
     UserApp1_StateMachine = UserApp1SM_Error;
   }
 
@@ -177,76 +199,93 @@ State Machine Function Definitions
 /* Wait for ANT channel assignment */
 static void UserApp1SM_AntChannelAssign()
 {
-  if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP) == ANT_CONFIGURED)
+  if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP_CHANNEL1) == ANT_CONFIGURED )
   {
-    /* Channel assignment is successful, so open channel and
-    proceed to Idle state */
-    AntOpenChannelNumber(ANT_CHANNEL_USERAPP);
-    UserApp1_StateMachine = UserApp1SM_Idle;
+    /* Attempt to queue the ANT channel 2 setup */
+    if( AntAssignChannel(&UserApp1_CHANNEL2_sChannelInfo) )
+    {
+      UserApp1_u32Timeout = G_u32SystemTime1ms;
+      UserApp1_StateMachine = UserApp1SM_AntMasterChannelAssign;
+    }
+    else
+    {
+      /* The task isn't properly initialized, so shut it down and don't run */
+      DebugPrintf(UserApp1_au8MessageFail2);
+      UserApp1_StateMachine = UserApp1SM_Error;
+    }
   }
-  
-  /* Watch for time out */
-  if(IsTimeUp(&UserApp1_u32Timeout, 3000))
+  else
   {
-    DebugPrintf(UserApp1_au8MessageFail);
-    UserApp1_StateMachine = UserApp1SM_Error;    
+    /* Watch for time out */
+    if(IsTimeUp(&UserApp1_u32Timeout, 3000))
+    {
+      DebugPrintf(UserApp1_au8MessageFail1);
+      UserApp1_StateMachine = UserApp1SM_Error;    
+    }
   }
      
 } /* end UserApp1SM_AntChannelAssign */
 
 /*-------------------------------------------------------------------------------------------------------------------*/
-/* Wait for ??? */
-static void UserApp1SM_Idle(void)
+/* Wait for ANT master channel assignment */
+static void UserApp1SM_AntMasterChannelAssign(void)
 {
-  static u8 au8TestMessage[] = {0, 0, 0, 0, 0xA5, 0, 0, 0};
-  u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
-  
-  /* Check all the buttons and update au8TestMessage according to the button state */ 
-  au8TestMessage[0] = 0x00;
-  if( IsButtonPressed(BUTTON0) )
+  if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP_CHANNEL1) == ANT_CONFIGURED )
   {
-    au8TestMessage[0] = 0xff;
+    /* Channel assignment is successful, so open channel and
+    proceed to Idle state */
+    AntOpenChannelNumber(ANT_CHANNEL_USERAPP_CHANNEL2);
+    AntOpenChannelNumber(ANT_CHANNEL_USERAPP_CHANNEL1);
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    UserApp1_StateMachine = UserApp1SM_WaitForPairing;
   }
-  
-  au8TestMessage[1] = 0x00;
-  if( IsButtonPressed(BUTTON1) )
+  else
   {
-    au8TestMessage[1] = 0xff;
-  }
-
-#ifdef EIE1
-  au8TestMessage[2] = 0x00;
-  if( IsButtonPressed(BUTTON2) )
-  {
-    au8TestMessage[2] = 0xff;
+    /* Watch for time out */
+    if(IsTimeUp(&UserApp1_u32Timeout, 3000))
+    {
+      DebugPrintf(UserApp1_au8MessageFail2);
+      UserApp1_StateMachine = UserApp1SM_Error;    
+    }
   }
 
-  au8TestMessage[3] = 0x00;
-  if( IsButtonPressed(BUTTON3) )
+} /* end UserApp1SM_AntMasterChannelAssign */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for pairing */
+static void UserApp1SM_WaitForPairing(void)
+{
+  static bool bDisplayed = FALSE;
+  static bool bHRMPaired = FALSE;
+  static bool bControlPaired = FALSE;
+  static u8 au8TestMessage[] = {0,0,0,0,0,0,0,0};
+  
+  if(!bDisplayed)
   {
-    au8TestMessage[3] = 0xff;
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,"Waiting for pairing");
+    LCDMessage(LINE2_START_ADDR,".  .  .  .  .  .");
+    bDisplayed = TRUE;
   }
-#endif /* EIE1 */
   
   if( AntReadAppMessageBuffer() )
   {
      /* New message from ANT task: check what it is */
     if(G_eAntApiCurrentMessageClass == ANT_DATA)
     {
-      /* We got some data: parse it into au8DataContent[] */
-      for(u8 i = 0; i < ANT_DATA_BYTES; i++)
+      if(G_sAntApiCurrentMessageExtData.u8Channel == 1)
       {
-        au8DataContent[2 * i]     = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] / 16);
-        au8DataContent[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] % 16);
+        bHRMPaired = TRUE;
       }
-
-#ifdef EIE1
-      LCDMessage(LINE2_START_ADDR, au8DataContent);
-#endif /* EIE1 */
       
-#ifdef MPG2
-#endif /* MPG2 */
-      
+      if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
+      {
+        if(G_au8AntApiCurrentMessageBytes[0] == 0)
+        {
+          bControlPaired = TRUE;
+        }
+      }
     }
     else if(G_eAntApiCurrentMessageClass == ANT_TICK)
     {
@@ -260,11 +299,186 @@ static void UserApp1SM_Idle(void)
           au8TestMessage[5]++;
         }
       }
-      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, au8TestMessage);
+      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP_CHANNEL2, au8TestMessage);
+    }
+  }
+  
+  if(/*bHRMPaired && */bControlPaired)
+  {
+    DebugPrintf("HRM and remote control paired\n\r");
+    UserApp1_StateMachine = UserApp1SM_Idle;
+  }
+
+  
+} /* end UserApp1SM_WaitForParing */
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for commands */
+static void UserApp1SM_Idle(void)
+{
+  static bool bDisplayed = FALSE;
+  static u8 au8TestMessage[] = {0xFF, 0, 0, 0, 0, 0, 0, 0};
+  
+  if(!bDisplayed)
+  {
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,"Channel paired !");
+    LCDMessage(LINE2_START_ADDR,"Waiting for commands");
+    bDisplayed = TRUE;
+  }
+  
+  if( AntReadAppMessageBuffer() )
+  {
+     /* New message from ANT task: check what it is */
+    if(G_eAntApiCurrentMessageClass == ANT_DATA)
+    {
+      if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
+      {
+        switch(G_au8AntApiCurrentMessageBytes[0])
+        {
+        case 1: UserApp1_StateMachine = UserApp1SM_Function1;
+                bDisplayed = FALSE;
+                break;
+        case 2: UserApp1_StateMachine = UserApp1SM_Function2;
+                bDisplayed = FALSE;
+                break;
+        case 3: UserApp1_StateMachine = UserApp1SM_Function3;
+                bDisplayed = FALSE;
+                break;
+        case 4: UserApp1_StateMachine = UserApp1SM_Function4;
+                bDisplayed = FALSE;
+                break;
+        default: ;
+        }
+      }
+    }
+    else if(G_eAntApiCurrentMessageClass == ANT_TICK)
+    {
+     /* Update and queue the new message data */
+      au8TestMessage[7]++;
+      if(au8TestMessage[7] == 0)
+      {
+        au8TestMessage[6]++;
+        if(au8TestMessage[6] == 0)
+        {
+          au8TestMessage[5]++;
+        }
+      }
+      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP_CHANNEL2, au8TestMessage);
     }
   } /* end AntReadData() */
   
 } /* end UserApp1SM_Idle() */
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Realize function 1 */
+static void UserApp1SM_Function1(void)
+{
+  static bool bDisplayed = FALSE;
+  static u8 au8TestMessage[] = {1, 0, 0, 0, 0, 0, 0, 0};
+  
+  if(!bDisplayed)
+  {
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,"  Ave. rate:   bpm");
+    LCDMessage(LINE2_START_ADDR," Time: 0h00min00sec");
+    bDisplayed = TRUE;
+  }
+  
+  if( AntReadAppMessageBuffer() )
+  {
+     /* New message from ANT task: check what it is */
+    if(G_eAntApiCurrentMessageClass == ANT_DATA)
+    {
+      if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
+      {
+        if(G_au8AntApiCurrentMessageBytes[0] == 0xFF)
+        {
+          bDisplayed = FALSE;
+          UserApp1_StateMachine = UserApp1SM_Idle;
+        }
+      }
+    }
+    else if(G_eAntApiCurrentMessageClass == ANT_TICK)
+    {
+     /* Update and queue the new message data */
+      au8TestMessage[7]++;
+      if(au8TestMessage[7] == 0)
+      {
+        au8TestMessage[6]++;
+        if(au8TestMessage[6] == 0)
+        {
+          au8TestMessage[5]++;
+        }
+      }
+      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP_CHANNEL2, au8TestMessage);
+    }
+  } /* end AntReadData() */
+
+} /* end UserApp1SM_Function1() */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Realize function 2 */
+static void UserApp1SM_Function2(void)
+{
+  static bool bDisplayed = FALSE;
+  static u8 au8TestMessage[] = {2, 0, 0, 0, 0, 0, 0, 0};
+  
+  if(!bDisplayed)
+  {
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,"Max:     Min:    bpm");
+    LCDMessage(LINE2_START_ADDR," Time: 0h00min00sec");
+    bDisplayed = TRUE;
+  }
+  
+  if( AntReadAppMessageBuffer() )
+  {
+     /* New message from ANT task: check what it is */
+    if(G_eAntApiCurrentMessageClass == ANT_DATA)
+    {
+      if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
+      {
+        if(G_au8AntApiCurrentMessageBytes[0] == 0xFF)
+        {
+          bDisplayed = FALSE;
+          UserApp1_StateMachine = UserApp1SM_Idle;
+        }
+      }
+    }
+    else if(G_eAntApiCurrentMessageClass == ANT_TICK)
+    {
+     /* Update and queue the new message data */
+      au8TestMessage[7]++;
+      if(au8TestMessage[7] == 0)
+      {
+        au8TestMessage[6]++;
+        if(au8TestMessage[6] == 0)
+        {
+          au8TestMessage[5]++;
+        }
+      }
+      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP_CHANNEL2, au8TestMessage);
+    }
+  } /* end AntReadData() */
+} /* end UserApp1SM_Function2() */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Realize function 3 */
+static void UserApp1SM_Function3(void)
+{
+  
+} /* end UserApp1SM_Function3() */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Realize function 4 */
+static void UserApp1SM_Function4(void)
+{
+  
+} /* end UserApp1SM_Function4() */
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
