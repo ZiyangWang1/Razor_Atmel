@@ -232,10 +232,6 @@ static void UserApp1SM_AntMasterChannelAssign(void)
 {
   if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP_CHANNEL1) == ANT_CONFIGURED )
   {
-    /* Channel assignment is successful, so open channel and
-    proceed to Idle state */
-    AntOpenChannelNumber(ANT_CHANNEL_USERAPP_CHANNEL2);
-    AntOpenChannelNumber(ANT_CHANNEL_USERAPP_CHANNEL1);
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_WaitForPairing;
   }
@@ -260,53 +256,63 @@ static void UserApp1SM_WaitForPairing(void)
   static bool bHRMPaired = FALSE;
   static bool bControlPaired = FALSE;
   static u8 au8TestMessage[] = {0,0,0,0,0,0,0,0};
+  static u16 u16Timer = 0;
   
-  if(!bDisplayed)
+  if(u16Timer == 1000)
   {
-    LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR,"Waiting for pairing");
-    LCDMessage(LINE2_START_ADDR,".  .  .  .  .  .");
-    bDisplayed = TRUE;
-  }
-  
-  if( AntReadAppMessageBuffer() )
-  {
-     /* New message from ANT task: check what it is */
-    if(G_eAntApiCurrentMessageClass == ANT_DATA)
+    if(!bDisplayed)
     {
-      if(G_sAntApiCurrentMessageExtData.u8Channel == 1)
+      AntOpenChannelNumber(ANT_CHANNEL_USERAPP_CHANNEL1);
+      AntOpenChannelNumber(ANT_CHANNEL_USERAPP_CHANNEL2);
+      LCDCommand(LCD_CLEAR_CMD);
+      LCDMessage(LINE1_START_ADDR,"Waiting for pairing");
+      LCDMessage(LINE2_START_ADDR,".  .  .  .  .  .");
+      bDisplayed = TRUE;
+    }
+    
+    if( AntReadAppMessageBuffer() )
+    {
+       /* New message from ANT task: check what it is */
+      if(G_eAntApiCurrentMessageClass == ANT_DATA)
       {
-        bHRMPaired = TRUE;
-      }
-      
-      if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
-      {
-        if(G_au8AntApiCurrentMessageBytes[0] == 0)
+        if(G_sAntApiCurrentMessageExtData.u8Channel == 1)
         {
-          bControlPaired = TRUE;
+          bHRMPaired = TRUE;
+        }
+        
+        if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
+        {
+          if(G_au8AntApiCurrentMessageBytes[0] == 0)
+          {
+            bControlPaired = TRUE;
+          }
         }
       }
-    }
-    else if(G_eAntApiCurrentMessageClass == ANT_TICK)
-    {
-     /* Update and queue the new message data */
-      au8TestMessage[7]++;
-      if(au8TestMessage[7] == 0)
+      else if(G_eAntApiCurrentMessageClass == ANT_TICK)
       {
-        au8TestMessage[6]++;
-        if(au8TestMessage[6] == 0)
+       /* Update and queue the new message data */
+        au8TestMessage[7]++;
+        if(au8TestMessage[7] == 0)
         {
-          au8TestMessage[5]++;
+          au8TestMessage[6]++;
+          if(au8TestMessage[6] == 0)
+          {
+            au8TestMessage[5]++;
+          }
         }
+        AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP_CHANNEL2, au8TestMessage);
       }
-      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP_CHANNEL2, au8TestMessage);
+    }
+    
+    if(/*bHRMPaired && */bControlPaired)
+    {
+      DebugPrintf("HRM and remote control paired\n\r");
+      UserApp1_StateMachine = UserApp1SM_Idle;
     }
   }
-  
-  if(/*bHRMPaired && */bControlPaired)
+  else
   {
-    DebugPrintf("HRM and remote control paired\n\r");
-    UserApp1_StateMachine = UserApp1SM_Idle;
+    u16Timer++;
   }
 
   

@@ -41,7 +41,7 @@ Constants / Definitions
 #define ANT_TX_POWER_USERAPP_CHANNEL2            RADIO_TX_POWER_4DBM   // RADIO_TX_POWER_0DBM, RADIO_TX_POWER_MINUS5DBM, RADIO_TX_POWER_MINUS10DBM, RADIO_TX_POWER_MINUS20DBM
 
 #define ANT_CHANNEL_TYPE_USERAPP_CHANNEL1        CHANNEL_TYPE_SLAVE    // Device is a MASTER
-#define ANT_CHANNEL_USERAPP_CHANNEL1             ANT_CHANNEL_0         // Channel 0 - 7
+#define ANT_CHANNEL_USERAPP_CHANNEL1             ANT_CHANNEL_1         // Channel 0 - 7
 #define ANT_DEVICEID_LO_USERAPP_CHANNEL1         (u8)0x01              // Low byte of two-byte Device #
 #define ANT_DEVICEID_HI_USERAPP_CHANNEL1         (u8)0x00              // High byte of two-byte Device #
 #define ANT_DEVICE_TYPE_USERAPP_CHANNEL1         (u8)120               // 1 - 255
