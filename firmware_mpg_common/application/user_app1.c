@@ -147,14 +147,14 @@ void UserApp1Initialize(void)
   UserApp1_CHANNEL2_sChannelInfo.AntNetwork = ANT_NETWORK_DEFAULT;
   for(u8 i = 0; i < ANT_NETWORK_NUMBER_BYTES; i++)
   {
-    UserApp1_CHANNEL2_sChannelInfo.AntNetworkKey[i] = ANT_DEFAULT_NETWORK_KEY;
+    UserApp1_CHANNEL2_sChannelInfo.AntNetworkKey[i] = au8ANTPlusNetworkKey[i];
   }
   
   /* Attempt to queue the ANT channel 1 setup */
   if( AntAssignChannel(&UserApp1_CHANNEL1_sChannelInfo) )
   {
     UserApp1_u32Timeout = G_u32SystemTime1ms;
-    UserApp1_StateMachine = UserApp1SM_AntChannelAssign;
+    UserApp1_StateMachine = UserApp1SM_AntChannel1Assign;
   }
   else
   {
@@ -197,7 +197,7 @@ State Machine Function Definitions
 **********************************************************************************************************************/
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ANT channel assignment */
-static void UserApp1SM_AntChannelAssign()
+static void UserApp1SM_AntChannel1Assign()
 {
   if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP_CHANNEL1) == ANT_CONFIGURED )
   {
@@ -205,7 +205,7 @@ static void UserApp1SM_AntChannelAssign()
     if( AntAssignChannel(&UserApp1_CHANNEL2_sChannelInfo) )
     {
       UserApp1_u32Timeout = G_u32SystemTime1ms;
-      UserApp1_StateMachine = UserApp1SM_AntMasterChannelAssign;
+      UserApp1_StateMachine = UserApp1SM_AntChannel2Assign;
     }
     else
     {
@@ -224,13 +224,59 @@ static void UserApp1SM_AntChannelAssign()
     }
   }
      
-} /* end UserApp1SM_AntChannelAssign */
+} /* end UserApp1SM_AntChannel1Assign */
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ANT master channel assignment */
-static void UserApp1SM_AntMasterChannelAssign(void)
+static void UserApp1SM_AntChannel2Assign(void)
 {
-  if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP_CHANNEL1) == ANT_CONFIGURED )
+  if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP_CHANNEL2) == ANT_CONFIGURED )
+  {
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    AntOpenChannelNumber(ANT_CHANNEL_USERAPP_CHANNEL1);
+    UserApp1_StateMachine = UserApp1SM_AntChannel1Open;
+  }
+  else
+  {
+    /* Watch for time out */
+    if(IsTimeUp(&UserApp1_u32Timeout, 3000))
+    {
+      DebugPrintf(UserApp1_au8MessageFail2);
+      UserApp1_StateMachine = UserApp1SM_Error;    
+    }
+  }
+
+} /* end UserApp1SM_AntChannel2Assign */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ANT  channel open */
+static void UserApp1SM_AntChannel1Open(void)
+{
+  if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP_CHANNEL1) == ANT_OPEN )
+  {
+    UserApp1_u32Timeout = G_u32SystemTime1ms;
+    AntOpenChannelNumber(ANT_CHANNEL_USERAPP_CHANNEL2);
+    UserApp1_StateMachine = UserApp1SM_AntChannel2Open;
+  }
+  else
+  {
+    /* Watch for time out */
+    if(IsTimeUp(&UserApp1_u32Timeout, 3000))
+    {
+      DebugPrintf(UserApp1_au8MessageFail2);
+      UserApp1_StateMachine = UserApp1SM_Error;    
+    }
+  }
+
+} /* end UserApp1SM_AntChannel1Open */
+
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ANT  channel open */
+static void UserApp1SM_AntChannel2Open(void)
+{
+  if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP_CHANNEL2) == ANT_OPEN )
   {
     UserApp1_u32Timeout = G_u32SystemTime1ms;
     UserApp1_StateMachine = UserApp1SM_WaitForPairing;
@@ -245,7 +291,8 @@ static void UserApp1SM_AntMasterChannelAssign(void)
     }
   }
 
-} /* end UserApp1SM_AntMasterChannelAssign */
+} /* end UserApp1SM_AntChannel2Open */
+
 
 
 /*-------------------------------------------------------------------------------------------------------------------*/
@@ -256,63 +303,53 @@ static void UserApp1SM_WaitForPairing(void)
   static bool bHRMPaired = FALSE;
   static bool bControlPaired = FALSE;
   static u8 au8TestMessage[] = {0,0,0,0,0,0,0,0};
-  static u16 u16Timer = 0;
   
-  if(u16Timer == 1000)
+  if(!bDisplayed)
   {
-    if(!bDisplayed)
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,"Waiting for pairing");
+    LCDMessage(LINE2_START_ADDR,".  .  .  .  .  .");
+    bDisplayed = TRUE;
+  }
+  
+  if( AntReadAppMessageBuffer() )
+  {
+     /* New message from ANT task: check what it is */
+    if(G_eAntApiCurrentMessageClass == ANT_DATA)
     {
-      AntOpenChannelNumber(ANT_CHANNEL_USERAPP_CHANNEL1);
-      AntOpenChannelNumber(ANT_CHANNEL_USERAPP_CHANNEL2);
-      LCDCommand(LCD_CLEAR_CMD);
-      LCDMessage(LINE1_START_ADDR,"Waiting for pairing");
-      LCDMessage(LINE2_START_ADDR,".  .  .  .  .  .");
-      bDisplayed = TRUE;
-    }
-    
-    if( AntReadAppMessageBuffer() )
-    {
-       /* New message from ANT task: check what it is */
-      if(G_eAntApiCurrentMessageClass == ANT_DATA)
+      if(G_sAntApiCurrentMessageExtData.u8Channel == 1)
       {
-        if(G_sAntApiCurrentMessageExtData.u8Channel == 1)
+        bHRMPaired = TRUE;
+      }
+      
+      if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
+      {
+        if(G_au8AntApiCurrentMessageBytes[0] == 0)
         {
-          bHRMPaired = TRUE;
-        }
-        
-        if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
-        {
-          if(G_au8AntApiCurrentMessageBytes[0] == 0)
-          {
-            bControlPaired = TRUE;
-          }
+          bControlPaired = TRUE;
         }
       }
-      else if(G_eAntApiCurrentMessageClass == ANT_TICK)
-      {
-       /* Update and queue the new message data */
-        au8TestMessage[7]++;
-        if(au8TestMessage[7] == 0)
-        {
-          au8TestMessage[6]++;
-          if(au8TestMessage[6] == 0)
-          {
-            au8TestMessage[5]++;
-          }
-        }
-        AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP_CHANNEL2, au8TestMessage);
-      }
     }
-    
-    if(/*bHRMPaired && */bControlPaired)
+    else if(G_eAntApiCurrentMessageClass == ANT_TICK)
     {
-      DebugPrintf("HRM and remote control paired\n\r");
-      UserApp1_StateMachine = UserApp1SM_Idle;
+     /* Update and queue the new message data */
+      au8TestMessage[7]++;
+      if(au8TestMessage[7] == 0)
+      {
+        au8TestMessage[6]++;
+        if(au8TestMessage[6] == 0)
+        {
+          au8TestMessage[5]++;
+        }
+      }
+      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP_CHANNEL2, au8TestMessage);
     }
   }
-  else
+  
+  if(bHRMPaired && bControlPaired)
   {
-    u16Timer++;
+    DebugPrintf("HRM and remote control paired\n\r");
+    UserApp1_StateMachine = UserApp1SM_Idle;
   }
 
   
@@ -382,12 +419,43 @@ static void UserApp1SM_Function1(void)
 {
   static bool bDisplayed = FALSE;
   static u8 au8TestMessage[] = {1, 0, 0, 0, 0, 0, 0, 0};
+  static u16 u16Timer = 0;
+  static u8 au8HRData[] = {0,0,0,0,0,0,0};
+  static u8 au8Display1[] = "  Ave. rate:   bpm";
+  static u8 au8Display2[] = "Time: 0h 00min 00sec";
   
+  u16Timer++;
+  
+  if(u16Timer == 1000)
+  {
+    u16Timer = 0;
+    au8HRData[6]++;
+    if(au8HRData[6] == 60)
+    {
+      au8HRData[5]++;
+      au8HRData[6] = 0;
+      if(au8HRData[5] == 60)
+      {
+        au8HRData[4]++;
+        au8HRData[5] = 0;
+      }
+    }
+    au8Display2[6] = au8HRData[4] + '0';
+    au8Display2[9] = au8HRData[5] / 10 + '0';
+    au8Display2[10] = au8HRData[5] % 10 + '0';
+    au8Display2[15] = au8HRData[6] / 10 + '0';
+    au8Display2[16] = au8HRData[6] %10 + '0';
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,au8Display1);
+    LCDMessage(LINE2_START_ADDR,au8Display2);
+    
+    
+  }
   if(!bDisplayed)
   {
     LCDCommand(LCD_CLEAR_CMD);
-    LCDMessage(LINE1_START_ADDR,"  Ave. rate:   bpm");
-    LCDMessage(LINE2_START_ADDR," Time: 0h00min00sec");
+    LCDMessage(LINE1_START_ADDR,au8Display1);
+    LCDMessage(LINE2_START_ADDR,au8Display2);
     bDisplayed = TRUE;
   }
   
@@ -401,6 +469,11 @@ static void UserApp1SM_Function1(void)
         if(G_au8AntApiCurrentMessageBytes[0] == 0xFF)
         {
           bDisplayed = FALSE;
+          au8Display2[6] = '0';
+          au8Display2[9] = '0';
+          au8Display2[10] = '0';
+          au8Display2[15] = '0';
+          au8Display2[16] = '0';
           UserApp1_StateMachine = UserApp1SM_Idle;
         }
       }

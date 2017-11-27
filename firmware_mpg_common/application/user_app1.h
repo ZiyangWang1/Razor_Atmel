@@ -40,6 +40,7 @@ Constants / Definitions
 #define ANT_FREQUENCY_USERAPP_CHANNEL2           (u8)50                // 2400MHz + this number 0 - 99
 #define ANT_TX_POWER_USERAPP_CHANNEL2            RADIO_TX_POWER_4DBM   // RADIO_TX_POWER_0DBM, RADIO_TX_POWER_MINUS5DBM, RADIO_TX_POWER_MINUS10DBM, RADIO_TX_POWER_MINUS20DBM
 
+
 #define ANT_CHANNEL_TYPE_USERAPP_CHANNEL1        CHANNEL_TYPE_SLAVE    // Device is a MASTER
 #define ANT_CHANNEL_USERAPP_CHANNEL1             ANT_CHANNEL_1         // Channel 0 - 7
 #define ANT_DEVICEID_LO_USERAPP_CHANNEL1         (u8)0x01              // Low byte of two-byte Device #
@@ -76,8 +77,10 @@ void UserApp1RunActiveState(void);
 /***********************************************************************************************************************
 State Machine Declarations
 ***********************************************************************************************************************/
-static void UserApp1SM_AntChannelAssign(void);
-static void UserApp1SM_AntMasterChannelAssign(void);
+static void UserApp1SM_AntChannel1Assign(void);
+static void UserApp1SM_AntChannel2Assign(void);
+static void UserApp1SM_AntChannel1Open(void);
+static void UserApp1SM_AntChannel2Open(void);
 static void UserApp1SM_WaitForPairing(void);
 static void UserApp1SM_Idle(void);  
 static void UserApp1SM_Function1(void);
