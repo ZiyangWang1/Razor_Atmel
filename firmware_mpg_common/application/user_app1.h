@@ -43,8 +43,8 @@ Constants / Definitions
 
 #define ANT_CHANNEL_TYPE_USERAPP_CHANNEL1        CHANNEL_TYPE_SLAVE    // Device is a MASTER
 #define ANT_CHANNEL_USERAPP_CHANNEL1             ANT_CHANNEL_1         // Channel 0 - 7
-#define ANT_DEVICEID_LO_USERAPP_CHANNEL1         (u8)0x01              // Low byte of two-byte Device #
-#define ANT_DEVICEID_HI_USERAPP_CHANNEL1         (u8)0x00              // High byte of two-byte Device #
+#define ANT_DEVICEID_LO_USERAPP_CHANNEL1         (u8)0xBB              // Low byte of two-byte Device #
+#define ANT_DEVICEID_HI_USERAPP_CHANNEL1         (u8)0xE7              // High byte of two-byte Device #
 #define ANT_DEVICE_TYPE_USERAPP_CHANNEL1         (u8)120               // 1 - 255
 #define ANT_TRANSMISSION_TYPE_USERAPP_CHANNEL1   (u8)1                 // 1-127 (MSB is pairing bit)
 #define ANT_CHANNEL_PERIOD_LO_USERAPP_CHANNEL1   (u8)0x86              // Low byte of two-byte channel period 0x0001 - 0x7fff

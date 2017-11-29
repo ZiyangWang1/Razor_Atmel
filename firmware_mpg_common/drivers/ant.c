@@ -1352,7 +1352,6 @@ static u8 AntProcessMessage(void)
           case EVENT_TRANSFER_TX_COMPLETED: /* ACK received from an acknowledged data message */
           { 
             G_asAntChannelConfiguration[u8Channel].AntFlags |= _ANT_FLAGS_GOT_ACK;
-
             AntTickExtended(au8MessageCopy);
             break;
           } 
@@ -1370,7 +1369,7 @@ static u8 AntProcessMessage(void)
             AntTickExtended(au8MessageCopy);
             break;
           }
- 
+          
           case EVENT_CHANNEL_CLOSED: /* The ANT channel is now closed */
           {
             DebugPrintf("Channel closed\n\r");
@@ -1382,7 +1381,6 @@ static u8 AntProcessMessage(void)
           default:
             DebugPrintNumber(au8MessageCopy[BUFFER_INDEX_RESPONSE_CODE]);
             DebugPrintf(": unexpected channel event\n\r");
-
             G_u32AntFlags |= _ANT_FLAGS_UNEXPECTED_EVENT;
             break;
         } /* end Ant_pu8AntRxBufferUnreadMsg[EVENT_CODE_INDEX] */

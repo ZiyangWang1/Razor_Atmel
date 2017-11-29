@@ -70,7 +70,7 @@ static AntAssignChannelInfoType UserApp1_CHANNEL2_sChannelInfo; /* ANT setup par
 
 static u8 UserApp1_au8MessageFail1[] = "\n\r***ANT channel 1 setup failed***\n\n\r";
 static u8 UserApp1_au8MessageFail2[] = "\n\r***ANT channel 2 setup failed***\n\n\r";
-
+static u8 UserApp1_au8Logs[5][5];
 
 
 /**********************************************************************************************************************
@@ -100,6 +100,14 @@ Promises:
 void UserApp1Initialize(void)
 {
   u8 au8ANTPlusNetworkKey[] = {0xB9,0xA5,0x21,0xFB,0xBD,0x72,0xC3,0x45};
+  
+  for(u8 i = 0; i < 5; i++)
+  {
+    for(u8 j = 0; j < 5; j++)
+    {
+      UserApp1_au8Logs[i][j] = 0;
+    }
+  }
   
   LCDCommand(LCD_CLEAR_CMD);
   LedOff(WHITE);
@@ -364,6 +372,7 @@ static void UserApp1SM_Idle(void)
   
   if(!bDisplayed)
   {
+    DebugPrintf("\r\nIdle is running.\r\n");
     LCDCommand(LCD_CLEAR_CMD);
     LCDMessage(LINE1_START_ADDR,"Channel paired !");
     LCDMessage(LINE2_START_ADDR,"Waiting for commands");
@@ -380,15 +389,19 @@ static void UserApp1SM_Idle(void)
         switch(G_au8AntApiCurrentMessageBytes[0])
         {
         case 1: UserApp1_StateMachine = UserApp1SM_Function1;
+                DebugPrintf("\r\nFunction 1 is running.\r\n");
                 bDisplayed = FALSE;
                 break;
         case 2: UserApp1_StateMachine = UserApp1SM_Function2;
+                DebugPrintf("\r\nFunction 2 is running.\r\n");
                 bDisplayed = FALSE;
                 break;
         case 3: UserApp1_StateMachine = UserApp1SM_Function3;
+                DebugPrintf("\r\nFunction 3 is running.\r\n");
                 bDisplayed = FALSE;
                 break;
         case 4: UserApp1_StateMachine = UserApp1SM_Function4;
+                DebugPrintf("\r\nFunction 4 is running.\r\n");
                 bDisplayed = FALSE;
                 break;
         default: ;
@@ -420,37 +433,59 @@ static void UserApp1SM_Function1(void)
   static bool bDisplayed = FALSE;
   static u8 au8TestMessage[] = {1, 0, 0, 0, 0, 0, 0, 0};
   static u16 u16Timer = 0;
-  static u8 au8HRData[] = {0,0,0,0,0,0,0};
+  static u8 u8AveRate = 0;
+  static u8 au8HRData[] = {0,0,0};
   static u8 au8Display1[] = "  Ave. rate:   bpm";
   static u8 au8Display2[] = "Time: 0h 00min 00sec";
+  static u8 au8PrintContant[100];
   
   u16Timer++;
   
   if(u16Timer == 1000)
   {
-    u16Timer = 0;
-    au8HRData[6]++;
-    if(au8HRData[6] == 60)
+    for(u8 i = 0;i < 100; i++)
     {
-      au8HRData[5]++;
-      au8HRData[6] = 0;
-      if(au8HRData[5] == 60)
+      au8PrintContant[i] = '\0';
+    }
+    
+    u16Timer = 0;
+    au8HRData[2]++;
+    
+    if(au8HRData[2] == 60)
+    {
+      au8HRData[1]++;
+      au8HRData[2] = 0;
+      if(au8HRData[1] == 60)
       {
-        au8HRData[4]++;
-        au8HRData[5] = 0;
+        au8HRData[0]++;
+        au8HRData[1] = 0;
       }
     }
-    au8Display2[6] = au8HRData[4] + '0';
-    au8Display2[9] = au8HRData[5] / 10 + '0';
-    au8Display2[10] = au8HRData[5] % 10 + '0';
-    au8Display2[15] = au8HRData[6] / 10 + '0';
-    au8Display2[16] = au8HRData[6] %10 + '0';
+    
+    for(u8 i = 0;i <  u8AveRate/3; i++)
+    {
+      au8PrintContant[i] = '*';
+    }
+    DebugPrintf(au8PrintContant);
+    DebugPrintNumber(u8AveRate);
+    DebugPrintf("\r\n");
+    au8Display1[12] = u8AveRate / 100 + '0';
+    au8Display1[13] = (u8AveRate % 100) / 10 + '0';
+    au8Display1[14] = u8AveRate % 10 + '0';
+    au8Display2[6] = au8HRData[0] + '0';
+    au8Display2[9] = au8HRData[1] / 10 + '0';
+    au8Display2[10] = au8HRData[1] % 10 + '0';
+    au8Display2[15] = au8HRData[2] / 10 + '0';
+    au8Display2[16] = au8HRData[2] %10 + '0';
+    
+    
     LCDCommand(LCD_CLEAR_CMD);
     LCDMessage(LINE1_START_ADDR,au8Display1);
     LCDMessage(LINE2_START_ADDR,au8Display2);
     
-    
+    u8AveRate = 0;
   }
+  
   if(!bDisplayed)
   {
     LCDCommand(LCD_CLEAR_CMD);
@@ -464,11 +499,24 @@ static void UserApp1SM_Function1(void)
      /* New message from ANT task: check what it is */
     if(G_eAntApiCurrentMessageClass == ANT_DATA)
     {
+      if(G_sAntApiCurrentMessageExtData.u8Channel == 1)
+      {
+        u8AveRate = G_au8AntApiCurrentMessageBytes[7];
+      }
+      
       if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
       {
         if(G_au8AntApiCurrentMessageBytes[0] == 0xFF)
         {
           bDisplayed = FALSE;
+          u16Timer = 0;
+          u8AveRate = 0;
+          au8HRData[0] = 0;
+          au8HRData[1] = 0;
+          au8HRData[2] = 0;
+          au8Display1[12] = ' ';
+          au8Display1[13] = ' ';
+          au8Display1[14] = ' ';
           au8Display2[6] = '0';
           au8Display2[9] = '0';
           au8Display2[10] = '0';
@@ -503,6 +551,45 @@ static void UserApp1SM_Function2(void)
 {
   static bool bDisplayed = FALSE;
   static u8 au8TestMessage[] = {2, 0, 0, 0, 0, 0, 0, 0};
+  static u16 u16Timer = 0;
+  static u8 au8HRData[] = {0,200,0,0,0};
+  static u8 au8Display1[] = "Max:    |Min:    bpm";
+  static u8 au8Display2[] = "Time: 0h 00min 00sec";
+  
+  u16Timer++;
+  
+  if(u16Timer == 1000)
+  {
+    u16Timer = 0;
+    au8HRData[4]++;
+    
+    if(au8HRData[4] == 60)
+    {
+      au8HRData[3]++;
+      au8HRData[4] = 0;
+      if(au8HRData[3] == 60)
+      {
+        au8HRData[2]++;
+        au8HRData[3] = 0;
+      }
+    }
+    
+    au8Display1[5] = au8HRData[0] / 100 + '0';
+    au8Display1[6] = (au8HRData[0] % 100) / 10 + '0';
+    au8Display1[7] = au8HRData[0] % 10 + '0';
+    au8Display1[13] = au8HRData[1] / 100 + '0';
+    au8Display1[14] = (au8HRData[1] % 100) / 10 + '0';
+    au8Display1[15] = au8HRData[1] % 10 + '0';
+    au8Display2[6] = au8HRData[2] + '0';
+    au8Display2[9] = au8HRData[3] / 10 + '0';
+    au8Display2[10] = au8HRData[3] % 10 + '0';
+    au8Display2[15] = au8HRData[4] / 10 + '0';
+    au8Display2[16] = au8HRData[4] %10 + '0';
+    
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,au8Display1);
+    LCDMessage(LINE2_START_ADDR,au8Display2);  
+  }
   
   if(!bDisplayed)
   {
@@ -517,11 +604,52 @@ static void UserApp1SM_Function2(void)
      /* New message from ANT task: check what it is */
     if(G_eAntApiCurrentMessageClass == ANT_DATA)
     {
+      if(G_sAntApiCurrentMessageExtData.u8Channel == 1)
+      {
+        if(G_au8AntApiCurrentMessageBytes[7] > au8HRData[0])
+        {
+          au8HRData[0] = G_au8AntApiCurrentMessageBytes[7];
+        }
+        
+        if(G_au8AntApiCurrentMessageBytes[7] < au8HRData[1])
+        {
+          au8HRData[1] = G_au8AntApiCurrentMessageBytes[7];
+        }
+      }
+      
       if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
       {
         if(G_au8AntApiCurrentMessageBytes[0] == 0xFF)
         {
           bDisplayed = FALSE;
+          u16Timer = 0;
+          au8Display1[5] = ' ';
+          au8Display1[6] = ' ';
+          au8Display1[7] = ' ';
+          au8Display1[13] = ' ';
+          au8Display1[14] = ' ';
+          au8Display1[15] = ' ';
+          au8Display2[6] = '0';
+          au8Display2[9] = '0';
+          au8Display2[10] = '0';
+          au8Display2[15] = '0';
+          au8Display2[16] = '0';
+          
+          for(u8 i = 4; i > 0; i--)
+          {
+            for (u8 j = 0; j < 5; j++)
+            {
+              UserApp1_au8Logs[i][j] = UserApp1_au8Logs[i-1][j];
+            }
+          }
+          
+          for(u8 i = 0; i < 5;i++)
+          {
+            UserApp1_au8Logs[0][i] = au8HRData[i];
+            au8HRData[i] = 0;
+          }
+          
+          au8HRData[1] = 200;
           UserApp1_StateMachine = UserApp1SM_Idle;
         }
       }
@@ -548,6 +676,151 @@ static void UserApp1SM_Function2(void)
 /* Realize function 3 */
 static void UserApp1SM_Function3(void)
 {
+  static u8 au8TestMessage[] = {3,0,0,0,0,0,0,0};
+  static u8 au8MaxandMinHeartRate[]=" .Max:    |Min:     ";
+  static u8 au8TimeDispaly[]="Time: 0h00min00sec  ";
+  static u8 u8RowArrayIndex=0;
+  static u8 u8ColumnArrayIndex=0;
+  static u8 u8RateInforIndex=6;
+  static u8 u8TimeInforIndex=6;
+  static u8 u8InforCounter=0;
+  static bool bDisplayed = TRUE;
+  static bool bB1Pressed = FALSE;
+  static bool bB2Pressed = FALSE;
+  
+  if(bDisplayed)
+  {
+    bDisplayed = FALSE;
+    u8InforCounter=0;
+    au8MaxandMinHeartRate[0] = u8InforCounter + 1 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex]=UserApp1_au8Logs[u8RowArrayIndex][u8ColumnArrayIndex] / 100 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+1]=(UserApp1_au8Logs[u8RowArrayIndex][u8ColumnArrayIndex] % 100) / 10 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+2]=UserApp1_au8Logs[u8RowArrayIndex][u8ColumnArrayIndex] % 10 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+9]=UserApp1_au8Logs[u8RowArrayIndex][u8ColumnArrayIndex+1] / 100 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+10]=(UserApp1_au8Logs[u8RowArrayIndex][u8ColumnArrayIndex+1] % 100) / 10 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+11]=UserApp1_au8Logs[u8RowArrayIndex][u8ColumnArrayIndex+1] % 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex]=UserApp1_au8Logs[u8RowArrayIndex][u8ColumnArrayIndex+2] + '0';
+    au8TimeDispaly[u8TimeInforIndex+2]=UserApp1_au8Logs[u8RowArrayIndex][u8ColumnArrayIndex+3] / 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex+3]=UserApp1_au8Logs[u8RowArrayIndex][u8ColumnArrayIndex+3] % 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex+7]=UserApp1_au8Logs[u8RowArrayIndex][u8ColumnArrayIndex+4] / 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex+8]=UserApp1_au8Logs[u8RowArrayIndex][u8ColumnArrayIndex+4] % 10 + '0';
+ 
+    au8TimeDispaly[19] = 'V';
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,au8MaxandMinHeartRate);
+    LCDMessage(LINE2_START_ADDR,au8TimeDispaly);
+  }
+  
+  if(bB1Pressed)
+  {
+    bB1Pressed = FALSE;
+    
+    if(u8InforCounter!=4)
+    {
+      u8InforCounter++;
+    }
+    au8MaxandMinHeartRate[0] = u8InforCounter + 1 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex] / 100 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+1]=(UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex] % 100) / 10 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+2]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex] % 10 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+9]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+1] / 100 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+10]=(UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+1] % 100) / 10 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+11]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+1] % 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+2] + '0';
+    au8TimeDispaly[u8TimeInforIndex+2]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+3] / 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex+3]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+3] % 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex+7]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+4] / 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex+8]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+4] % 10 + '0';
+    
+    if(u8InforCounter == 4)
+    {
+      au8MaxandMinHeartRate[19] = 23;
+      au8TimeDispaly[19] = ' ';
+    }
+    else
+    {
+      au8MaxandMinHeartRate[19] = 23;
+      au8TimeDispaly[19] = 'V';
+    }
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,au8MaxandMinHeartRate);
+    LCDMessage(LINE2_START_ADDR,au8TimeDispaly);
+  }
+  
+  if(bB2Pressed)
+  {
+    bB2Pressed = FALSE;
+    
+    if(u8InforCounter!=0)
+    {
+      u8InforCounter--;
+    }
+    au8MaxandMinHeartRate[0] = u8InforCounter + 1 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex] / 100 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+1]=(UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex] % 100) / 10 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+2]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex] % 10 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+9]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+1] / 100 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+10]=(UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+1] % 100) / 10 + '0';
+    au8MaxandMinHeartRate[u8RateInforIndex+11]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+1] % 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+2] + '0';
+    au8TimeDispaly[u8TimeInforIndex+2]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+3] / 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex+3]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+3] % 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex+7]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+4] / 10 + '0';
+    au8TimeDispaly[u8TimeInforIndex+8]=UserApp1_au8Logs[u8RowArrayIndex+u8InforCounter][u8ColumnArrayIndex+4] % 10 + '0';
+    
+    if(u8InforCounter == 0)
+    {
+      au8MaxandMinHeartRate[19] = ' ';
+      au8TimeDispaly[19] = 'V';
+    }
+    else
+    {
+      au8MaxandMinHeartRate[19] = 23;
+      au8TimeDispaly[19] = 'V';
+    }
+    LCDMessage(LINE1_START_ADDR,au8MaxandMinHeartRate);
+    LCDMessage(LINE2_START_ADDR,au8TimeDispaly); 
+  }
+
+  if( AntReadAppMessageBuffer() )
+  {
+     /* New message from ANT task: check what it is */
+    if(G_eAntApiCurrentMessageClass == ANT_DATA)
+    {
+      if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
+      {
+        if(G_au8AntApiCurrentMessageBytes[0] == 0xFF)
+        {
+          bDisplayed = TRUE;
+          UserApp1_StateMachine = UserApp1SM_Idle;
+        }
+        
+        if(G_au8AntApiCurrentMessageBytes[0] == 0x10)
+        {
+          bB1Pressed = TRUE;
+        }
+        
+        if(G_au8AntApiCurrentMessageBytes[0] == 0x20)
+        {
+          bB2Pressed = TRUE;
+        }
+      }
+    }
+    else if(G_eAntApiCurrentMessageClass == ANT_TICK)
+    {
+     /* Update and queue the new message data */
+      au8TestMessage[7]++;
+      if(au8TestMessage[7] == 0)
+      {
+        au8TestMessage[6]++;
+        if(au8TestMessage[6] == 0)
+        {
+          au8TestMessage[5]++;
+        }
+      }
+      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP_CHANNEL2, au8TestMessage);
+    }
+  } /* end AntReadData() */
   
 } /* end UserApp1SM_Function3() */
 
@@ -556,7 +829,52 @@ static void UserApp1SM_Function3(void)
 /* Realize function 4 */
 static void UserApp1SM_Function4(void)
 {
-  
+  static u8 au8TestMessage[] = {4,0,0,0,0,0,0,0};
+  static u16 u16DisplayInterval=0;
+  static u8 au8ScrollMessage[]="Sheng andHeandWang  ";
+   
+  u16DisplayInterval++;
+   
+  if(u16DisplayInterval==1000)
+  {
+    u16DisplayInterval=0;
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR, au8ScrollMessage); 
+    
+    for(u8 u8index=19;u8index>0;u8index--)
+    {
+      au8ScrollMessage[u8index]=au8ScrollMessage[u8index-1];
+    }
+    au8ScrollMessage[0]=au8ScrollMessage[19];
+  }
+  if( AntReadAppMessageBuffer() )
+  {
+     /* New message from ANT task: check what it is */
+    if(G_eAntApiCurrentMessageClass == ANT_DATA)
+    {
+      if(G_sAntApiCurrentMessageExtData.u8Channel == 2)
+      {
+        if(G_au8AntApiCurrentMessageBytes[0] == 0xFF)
+        {
+          UserApp1_StateMachine = UserApp1SM_Idle;
+        }
+      }
+    }
+    else if(G_eAntApiCurrentMessageClass == ANT_TICK)
+    {
+     /* Update and queue the new message data */
+      au8TestMessage[7]++;
+      if(au8TestMessage[7] == 0)
+      {
+        au8TestMessage[6]++;
+        if(au8TestMessage[6] == 0)
+        {
+          au8TestMessage[5]++;
+        }
+      }
+      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP_CHANNEL2, au8TestMessage);
+    }
+  } /* end AntReadData() */
 } /* end UserApp1SM_Function4() */
 
 
