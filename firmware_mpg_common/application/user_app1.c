@@ -136,9 +136,55 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  static u8 au8DisplayMessage1[] = "Please sellect mode!";
+  static u8 au8DisplayMessage2[] = "B0: Piano B1: Edit";
+  static bool bDisplayed = FALSE;
+  
+  if(!bDisplayed)
+  {
+    bDisplayed = TRUE;
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,au8DisplayMessage1);
+    LCDMessage(LINE2_START_ADDR,au8DisplayMessage2);
+  }
+  
+  if(WasButtonPressed(BUTTON0))
+  {
+    UserApp1_StateMachine = UserApp1SM_PianoMode;
+    ButtonAcknowledge(BUTTON0);
+    bDisplayed = FALSE;
+  }
+  
+  if(WasButtonPressed(BUTTON1))
+  {
+    UserApp1_StateMachine = UserApp1SM_EditMode;
+    ButtonAcknowledge(BUTTON1);
+    bDisplayed = FALSE;
+  }
+    
+  
+} /* end UserApp1SM_Idle() */
+    
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_PianoMode(void)
+{
+  static u8 au8DisplayMessage1[] = "Piano Mode...";
+  static u8 au8DisplayMessage2[] = "Press B0 to exit!";
+  static bool bDisplayed = FALSE;
   static u8 au8Buffer[2] = {0,0};
   static u16 u16Frequence = 0;
   static u16 u16Counter = 0;
+  
+  if(!bDisplayed)
+  {
+    bDisplayed = TRUE;
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,au8DisplayMessage1);
+    LCDMessage(LINE2_START_ADDR,au8DisplayMessage2);
+    DebugPrintf("\r\nPiano mode selected!\r\n");
+  }
   
   if((bool)DebugScanf(au8Buffer))
   {
@@ -170,9 +216,112 @@ static void UserApp1SM_Idle(void)
     }
     u16Counter++;
   }
+  
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+    bDisplayed = FALSE;
+    UserApp1_StateMachine = UserApp1SM_Idle;
+  }
+  
+} /* end UserApp1SM_PianoMode() */
 
-} /* end UserApp1SM_Idle() */
+
+/*-------------------------------------------------------------------------------------------------------------------*/
+/* Wait for ??? */
+static void UserApp1SM_EditMode(void)
+{
+  static u8 au8DisplayMessage1[] = "Edit Mode B0:Clean";
+  static u8 au8DisplayMessage2[] = "B1:Play B2:Stop B3:E";
+  static u8 au8DebugMessage1[] = "\n\rPlease enter notes (end with enter):";
+  static u8 au8DebugMessage2[] = "\n\rPlease enter length (end with enter; '9' is sixteenth note):";
+  static u16 u16Frequence[50];
+  static u16 au16length[50];
+  static u8 u8NoteCounts = 0;
+  static u8 u8LengthCounts = 0;
+  u8 au8Buffer[2];
+  
+  static bool bDisplayed = FALSE;
+  static bool bNoteEntered = FALSE;
+  static bool bLengthEntered = FALSE;
+  
+  if(!bDisplayed)
+  {
+    bDisplayed = TRUE;
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,au8DisplayMessage1);
+    LCDMessage(LINE2_START_ADDR,au8DisplayMessage2);
+    DebugPrintf("\r\nEdit mode selected!\r\n");
+  }
+  
+  if(!bNoteEntered)
+  {
+    DebugPrintf(au8DebugMessage1);
     
+    if((bool)DebugScanf(au8Buffer))
+    {
+      if(au8Buffer[0] == '\r')
+      {
+        bNoteEntered = TRUE;
+        DebugPrintf("\r\nNotes entered!\n\r");
+      }
+      else
+      {
+        switch (au8Buffer[0])
+        {
+        case '1' : u16Frequence[u8NoteCounts] = C5;u8NoteCounts++;break;
+        case '2' : u16Frequence[u8NoteCounts] = D5;u8NoteCounts++;break;
+        case '3' : u16Frequence[u8NoteCounts] = E5;u8NoteCounts++;break;
+        case '4' : u16Frequence[u8NoteCounts] = F5;u8NoteCounts++;break;
+        case '5' : u16Frequence[u8NoteCounts] = G5;u8NoteCounts++;break;
+        case '6' : u16Frequence[u8NoteCounts] = A5;u8NoteCounts++;break;
+        case '7' : u16Frequence[u8NoteCounts] = B5;u8NoteCounts++;break;
+        default : DebugPrintf("Invalid note!");
+        }
+      }
+    }
+  }
+  else
+  {
+    if(!bLengthEntered)
+    {
+      DebugPrintf(au8DebugMessage2);
+      
+      if((bool)DebugScanf(au8Buffer))
+      {
+        if(au8Buffer[0] == '\r')
+        {
+          bLengthEntered = TRUE;
+          DebugPrintf("\r\nLength entered!\n\r");
+        }
+        else
+        {
+          switch (au8Buffer[0])
+          {
+          case '1' : au16length[u8LengthCounts] = FULL_NOTE;u8LengthCounts++;break;
+          case '2' : au16length[u8LengthCounts] = HALF_NOTE;u8LengthCounts++;break;
+          case '4' : au16length[u8LengthCounts] = QUARTER_NOTE;u8LengthCounts++;break;
+          case '8' : au16length[u8LengthCounts] = EIGHTH_NOTE;u8LengthCounts++;break;
+          case '9' : au16length[u8LengthCounts] = SIXTEENTH_NOTE;u8LengthCounts++;break;
+          default : DebugPrintf("Invalid length!");
+          }
+        }
+      }
+    }
+  }
+  
+  
+  
+  if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+    bDisplayed = FALSE;
+    UserApp1_StateMachine = UserApp1SM_Idle;
+  }  
+  
+} /* end UserApp1SM_EditMode() */
+
+
 #if 0
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */
