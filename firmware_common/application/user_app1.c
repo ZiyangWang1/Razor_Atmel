@@ -198,6 +198,7 @@ static void UserApp1SM_Idle(void)
     u16Counter1 = 0;
     u16NoteCount1++;
     
+    // If the blank note, cut 25ms of the next note 
     if(bRepeat1)
     {
       bRepeat1 = FALSE;
@@ -207,6 +208,7 @@ static void UserApp1SM_Idle(void)
     }
     else
     {
+      // If two neighbour notes are the same, insert a 24ms-None
       if(au16NoteBuzzer1[u16NoteCount1] == au16NoteBuzzer1[u16NoteCount1-1])
       {
         bRepeat1 = TRUE;
@@ -215,12 +217,14 @@ static void UserApp1SM_Idle(void)
       }
       else
       {
+        // If there is no same notes, jump to the next note
         u16NeedLength1 = au16LengthBuzzer1[u16NoteCount1];
         PWMAudioSetFrequency(BUZZER1,au16NoteBuzzer1[u16NoteCount1]);
       }
     }
   }
   
+  // The same action of buzzer2
   if(u16Counter2 == u16NeedLength2)
   {
     u16Counter2 = 0;
@@ -248,12 +252,6 @@ static void UserApp1SM_Idle(void)
       }
     }
   }
-  /*if(u16Counter2 == au16LengthBuzzer2[u16NoteCount2])
-  {
-    u16Counter2 = 0;
-    u16NoteCount2++;
-    PWMAudioSetFrequency(BUZZER2,au16NoteBuzzer2[u16NoteCount2]);
-  }*/
   
   /* Cycle the music */
   if(u16NoteCount1 == (sizeof(au16LengthBuzzer1)/2-1))
