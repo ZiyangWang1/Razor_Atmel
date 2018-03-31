@@ -87,6 +87,43 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+  /* Enable PIO of PA16£¬15£¬14£¬13£¬12£¬11£¬PB03 and 04 */
+  AT91C_BASE_PIOA->PIO_PER = PA_16_BLADE_CS;
+  AT91C_BASE_PIOA->PIO_PER = PA_15_BLADE_SCK;
+  AT91C_BASE_PIOA->PIO_PER = PA_14_BLADE_MOSI;
+  AT91C_BASE_PIOA->PIO_PER = PA_13_BLADE_MISO;
+  AT91C_BASE_PIOA->PIO_PER = PA_12_BLADE_UPOMI;
+  AT91C_BASE_PIOA->PIO_PER = PA_11_BLADE_UPIMO;
+  AT91C_BASE_PIOB->PIO_PER = PB_04_BLADE_AN1;
+  AT91C_BASE_PIOB->PIO_PER = PB_03_BLADE_AN0;
+  
+  /* Enable output of PA16£¬15£¬14£¬13£¬12£¬11£¬PB03 and 04 */
+  AT91C_BASE_PIOA->PIO_OER = PA_16_BLADE_CS;
+  AT91C_BASE_PIOA->PIO_OER = PA_15_BLADE_SCK;
+  AT91C_BASE_PIOA->PIO_OER = PA_14_BLADE_MOSI;
+  AT91C_BASE_PIOA->PIO_OER = PA_13_BLADE_MISO;
+  AT91C_BASE_PIOA->PIO_OER = PA_12_BLADE_UPOMI;
+  AT91C_BASE_PIOA->PIO_OER = PA_11_BLADE_UPIMO;
+  AT91C_BASE_PIOB->PIO_OER = PB_04_BLADE_AN1;
+  AT91C_BASE_PIOB->PIO_OER = PB_03_BLADE_AN0;
+  
+  /* Enable Pull-up of PA16£¬15£¬14£¬13£¬12£¬11£¬PB03 and 04 */
+  AT91C_BASE_PIOA->PIO_PPUER = PA_16_BLADE_CS;
+  AT91C_BASE_PIOA->PIO_PPUER = PA_15_BLADE_SCK;
+  AT91C_BASE_PIOA->PIO_PPUER = PA_14_BLADE_MOSI;
+  AT91C_BASE_PIOA->PIO_PPUER = PA_13_BLADE_MISO;
+  AT91C_BASE_PIOA->PIO_PPUER = PA_12_BLADE_UPOMI;
+  AT91C_BASE_PIOA->PIO_PPUER = PA_11_BLADE_UPIMO;
+  AT91C_BASE_PIOB->PIO_PPUER = PB_04_BLADE_AN1;
+  AT91C_BASE_PIOB->PIO_PPUER = PB_03_BLADE_AN0;
+  
+  /* Pull up the CS and INC pin */
+  AT91C_BASE_PIOA->PIO_SODR = PA_13_BLADE_MISO;
+  AT91C_BASE_PIOA->PIO_SODR = PA_12_BLADE_UPOMI;
+  AT91C_BASE_PIOB->PIO_SODR = PB_04_BLADE_AN1;
+  AT91C_BASE_PIOA->PIO_CODR = PA_11_BLADE_UPIMO;
+  
+  LedOn(PURPLE);
  
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -136,6 +173,74 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  static u8 u8Timer = 0;
+  static u8 u8States = 0;
+  static bool bVUp = FALSE;
+  static bool bVDown = FALSE;
+  static bool bTimerStart = FALSE;
+  
+  if(bTimerStart)
+  {
+    u8Timer++;
+  }
+  
+  if(WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+    bVUp = TRUE;
+    bTimerStart = TRUE;
+    u8Timer = 0;
+    LedOn(RED);
+  }
+  
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+    bVDown = TRUE;
+    bTimerStart = TRUE;
+    u8Timer = 0;
+    LedOn(RED);
+  }
+  
+  if(WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+    switch(u8States)
+    {
+    case 0: AT91C_BASE_PIOB->PIO_SODR = PB_03_BLADE_AN0;
+            AT91C_BASE_PIOA->PIO_CODR = PB_04_BLADE_AN1;
+            AT91C_BASE_PIOB->PIO_CODR = PB_03_BLADE_AN0;
+    }
+  }
+  
+  if(bVUp)
+  {
+    switch(u8Timer)
+    {
+    case 0: AT91C_BASE_PIOA->PIO_CODR = PA_13_BLADE_MISO;break;
+    case 1: AT91C_BASE_PIOA->PIO_SODR = PA_14_BLADE_MOSI;break;
+    case 2: AT91C_BASE_PIOA->PIO_CODR = PA_12_BLADE_UPOMI;break;
+    case 3: AT91C_BASE_PIOA->PIO_SODR = PA_12_BLADE_UPOMI;break;
+    case 4: AT91C_BASE_PIOA->PIO_SODR = PA_13_BLADE_MISO;break;
+    case 50: LedOff(RED);bTimerStart = FALSE; bVUp = FALSE;break;
+    default:;
+    }
+  }
+  
+  if(bVDown)
+  {
+    switch(u8Timer)
+    {
+    case 0: AT91C_BASE_PIOA->PIO_CODR = PA_13_BLADE_MISO;break;
+    case 1: AT91C_BASE_PIOA->PIO_CODR = PA_14_BLADE_MOSI;break;
+    case 2: AT91C_BASE_PIOA->PIO_CODR = PA_12_BLADE_UPOMI;break;
+    case 3: AT91C_BASE_PIOA->PIO_SODR = PA_12_BLADE_UPOMI;break;
+    case 4: AT91C_BASE_PIOA->PIO_SODR = PA_13_BLADE_MISO;break;
+    case 50: LedOff(RED);bTimerStart = FALSE; bVDown = FALSE;break;
+    default:;
+    }
+  }
+  
 
 } /* end UserApp1SM_Idle() */
     
