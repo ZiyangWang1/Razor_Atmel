@@ -87,7 +87,7 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  /* Enable PIO of PA16£¬15£¬14£¬13£¬12£¬11£¬PB03 and 04 */
+  /* Enable PIO of PA16£¬15£¬14£¬13£¬12£¬11 and PB04 */
   AT91C_BASE_PIOA->PIO_PER = PA_16_BLADE_CS;
   AT91C_BASE_PIOA->PIO_PER = PA_15_BLADE_SCK;
   AT91C_BASE_PIOA->PIO_PER = PA_14_BLADE_MOSI;
@@ -95,9 +95,8 @@ void UserApp1Initialize(void)
   AT91C_BASE_PIOA->PIO_PER = PA_12_BLADE_UPOMI;
   AT91C_BASE_PIOA->PIO_PER = PA_11_BLADE_UPIMO;
   AT91C_BASE_PIOB->PIO_PER = PB_04_BLADE_AN1;
-  AT91C_BASE_PIOB->PIO_PER = PB_03_BLADE_AN0;
   
-  /* Enable output of PA16£¬15£¬14£¬13£¬12£¬11£¬PB03 and 04 */
+  /* Enable output of PA16, 15£¬14£¬13£¬12£¬11 and PB04 */
   AT91C_BASE_PIOA->PIO_OER = PA_16_BLADE_CS;
   AT91C_BASE_PIOA->PIO_OER = PA_15_BLADE_SCK;
   AT91C_BASE_PIOA->PIO_OER = PA_14_BLADE_MOSI;
@@ -105,9 +104,8 @@ void UserApp1Initialize(void)
   AT91C_BASE_PIOA->PIO_OER = PA_12_BLADE_UPOMI;
   AT91C_BASE_PIOA->PIO_OER = PA_11_BLADE_UPIMO;
   AT91C_BASE_PIOB->PIO_OER = PB_04_BLADE_AN1;
-  AT91C_BASE_PIOB->PIO_OER = PB_03_BLADE_AN0;
   
-  /* Enable Pull-up of PA16£¬15£¬14£¬13£¬12£¬11£¬PB03 and 04 */
+  /* Enable Pull-up of PA16, 15£¬14£¬13£¬12£¬11 and PB04 */
   AT91C_BASE_PIOA->PIO_PPUER = PA_16_BLADE_CS;
   AT91C_BASE_PIOA->PIO_PPUER = PA_15_BLADE_SCK;
   AT91C_BASE_PIOA->PIO_PPUER = PA_14_BLADE_MOSI;
@@ -115,13 +113,13 @@ void UserApp1Initialize(void)
   AT91C_BASE_PIOA->PIO_PPUER = PA_12_BLADE_UPOMI;
   AT91C_BASE_PIOA->PIO_PPUER = PA_11_BLADE_UPIMO;
   AT91C_BASE_PIOB->PIO_PPUER = PB_04_BLADE_AN1;
-  AT91C_BASE_PIOB->PIO_PPUER = PB_03_BLADE_AN0;
   
   /* Pull up the CS and INC pin */
   AT91C_BASE_PIOA->PIO_SODR = PA_13_BLADE_MISO;
   AT91C_BASE_PIOA->PIO_SODR = PA_12_BLADE_UPOMI;
   AT91C_BASE_PIOB->PIO_SODR = PB_04_BLADE_AN1;
   AT91C_BASE_PIOA->PIO_CODR = PA_11_BLADE_UPIMO;
+  AT91C_BASE_PIOA->PIO_CODR = PA_15_BLADE_SCK;
   
   LedOn(PURPLE);
  
@@ -160,6 +158,13 @@ void UserApp1RunActiveState(void)
 } /* end UserApp1RunActiveState */
 
 
+
+void UserApp_AdcCallback(u16 u16Result_)
+{
+  Adc12AssignCallback(ADC12_CH2, UserApp_AdcCallback);
+}
+
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -178,42 +183,41 @@ static void UserApp1SM_Idle(void)
   static bool bVUp = FALSE;
   static bool bVDown = FALSE;
   static bool bTimerStart = FALSE;
+  static bool bAdcReady = FALSE;
+  static u16 u16AdcResult = 0;
+  static u8 u8VolLevl = 0;
+  static float fVolta = 0;
+  static u8 au8Display[] = "    .  V";
   
-  if(bTimerStart)
+  if(bTimerStart)       // A ms timer
   {
     u8Timer++;
   }
   
-  if(WasButtonPressed(BUTTON0))
+  if(u8Timer == 100)    // Reset the timer when reach 100ms
+  {
+    LedOff(RED);
+    bTimerStart = FALSE;
+    u8Timer = 0;
+  }
+  
+  if(WasButtonPressed(BUTTON0))         // Set a up-flag when press B0
   {
     ButtonAcknowledge(BUTTON0);
     bVUp = TRUE;
     bTimerStart = TRUE;
-    u8Timer = 0;
     LedOn(RED);
   }
   
-  if(WasButtonPressed(BUTTON1))
+  if(WasButtonPressed(BUTTON1))         // Set a down-flag when press B1
   {
     ButtonAcknowledge(BUTTON1);
     bVDown = TRUE;
     bTimerStart = TRUE;
-    u8Timer = 0;
     LedOn(RED);
   }
   
-  if(WasButtonPressed(BUTTON3))
-  {
-    ButtonAcknowledge(BUTTON3);
-    switch(u8States)
-    {
-    case 0: AT91C_BASE_PIOB->PIO_SODR = PB_03_BLADE_AN0;
-            AT91C_BASE_PIOA->PIO_CODR = PB_04_BLADE_AN1;
-            AT91C_BASE_PIOB->PIO_CODR = PB_03_BLADE_AN0;
-    }
-  }
-  
-  if(bVUp)
+  if(bVUp)      // Handle up-flag
   {
     switch(u8Timer)
     {
@@ -222,12 +226,12 @@ static void UserApp1SM_Idle(void)
     case 2: AT91C_BASE_PIOA->PIO_CODR = PA_12_BLADE_UPOMI;break;
     case 3: AT91C_BASE_PIOA->PIO_SODR = PA_12_BLADE_UPOMI;break;
     case 4: AT91C_BASE_PIOA->PIO_SODR = PA_13_BLADE_MISO;break;
-    case 50: LedOff(RED);bTimerStart = FALSE; bVUp = FALSE;break;
+    case 5: bVUp = FALSE;break;
     default:;
     }
   }
   
-  if(bVDown)
+  if(bVDown)    // Handle down-flag
   {
     switch(u8Timer)
     {
@@ -236,12 +240,86 @@ static void UserApp1SM_Idle(void)
     case 2: AT91C_BASE_PIOA->PIO_CODR = PA_12_BLADE_UPOMI;break;
     case 3: AT91C_BASE_PIOA->PIO_SODR = PA_12_BLADE_UPOMI;break;
     case 4: AT91C_BASE_PIOA->PIO_SODR = PA_13_BLADE_MISO;break;
-    case 50: LedOff(RED);bTimerStart = FALSE; bVDown = FALSE;break;
+    case 5: bVDown = FALSE;break;
+    default:;
+    }
+  }
+
+  if(WasButtonPressed(BUTTON3)) // Switch status when press B3
+  {
+    ButtonAcknowledge(BUTTON3);
+    bTimerStart = TRUE;
+    LedOn(RED);
+    switch(u8States)
+    {
+    case 0: AT91C_BASE_PIOA->PIO_SODR = PA_16_BLADE_CS;
+            AT91C_BASE_PIOB->PIO_CODR = PB_04_BLADE_AN1;
+            AT91C_BASE_PIOA->PIO_CODR = PA_11_BLADE_UPIMO;
+            LedOff(PURPLE);LedOn(BLUE);u8States = 1;break;
+    case 1: AT91C_BASE_PIOA->PIO_CODR = PA_16_BLADE_CS;
+            AT91C_BASE_PIOB->PIO_CODR = PB_04_BLADE_AN1;
+            AT91C_BASE_PIOA->PIO_CODR = PA_11_BLADE_UPIMO;
+            LedOff(BLUE);LedOn(GREEN);u8States = 2;break;
+    case 2: AT91C_BASE_PIOB->PIO_SODR = PB_04_BLADE_AN1;
+            AT91C_BASE_PIOA->PIO_CODR = PA_11_BLADE_UPIMO;
+            LedOff(GREEN);LedOn(PURPLE);u8States = 0;break;
     default:;
     }
   }
   
-
+  if(WasButtonPressed(BUTTON2)) // Get ready for ADC when press B2
+  {
+    ButtonAcknowledge(BUTTON2);
+    bTimerStart = TRUE;
+    LedOn(RED);
+    if(AT91C_BASE_PIOA->PIO_ODSR & PA_15_BLADE_SCK)
+    {
+     AT91C_BASE_PIOA->PIO_CODR = PA_15_BLADE_SCK;
+     LedOff(WHITE);
+     AT91C_BASE_PIOA->PIO_CODR = PA_11_BLADE_UPIMO;
+     switch(u8States)
+     {
+     case 0:LedOn(PURPLE);break;
+     case 1:LedOn(BLUE);break;
+     case 2:LedOn(GREEN);break;
+     default:;
+     }
+    }
+    else
+    {
+      AT91C_BASE_PIOA->PIO_SODR = PA_15_BLADE_SCK;
+      AT91C_BASE_PIOA->PIO_SODR = PA_11_BLADE_UPIMO;
+      LedOff(GREEN);
+      LedOff(BLUE);
+      LedOff(PURPLE);
+      LedOn(WHITE);
+      bTimerStart = TRUE; 
+      bAdcReady = TRUE;
+    }
+  }
+  
+  if(bAdcReady && u8Timer == 50)        // Convert after 50ms
+  {
+    Adc12StartConversion(ADC12_CH2);
+  }
+  
+  if(bAdcReady && u8Timer == 99)        // Display after 99ms
+  {
+    bAdcReady = FALSE;
+    u16AdcResult = AT91C_BASE_ADC12B->ADC12B_CDR[2];
+    u8VolLevl = u16AdcResult / 41;
+    fVolta = u16AdcResult;
+    fVolta *= 3.3;
+    fVolta /= 4095;
+    au8Display[0] = u8VolLevl / 10 + '0';
+    au8Display[1] = u8VolLevl % 10 + '0';
+    au8Display[3] = (u8)fVolta + '0';
+    au8Display[5] = (u8)(fVolta * 10) % 10 + '0';
+    au8Display[6] = (u16)(fVolta * 100) % 10 + '0';
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(LINE1_START_ADDR,au8Display);
+  }
+  
 } /* end UserApp1SM_Idle() */
     
 
