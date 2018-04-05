@@ -43,6 +43,13 @@ All Global variable names shall start with "G_UserApp1"
 /* New variables */
 volatile u32 G_u32UserApp1Flags;                       /* Global state flags */
 
+static UartPeripheralType* UserApp_Uart;
+static u32 UserApp_u32CurrentMessageToken; 
+static u8 UserApp_au8RxBuffer[USERAPP_RX_BUFFER_SIZE];
+static u8 *UserApp_pu8RxBufferNextChar;  
+static u8 *UserApp_pu8RxBufferParser;
+static u8 UserApp_au8StartupMsg[] = "\n\n\r*** UserApp UART Ready ***\n\r";
+
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Existing variables (defined in other files -- should all contain the "extern" keyword) */
@@ -73,6 +80,7 @@ Function Definitions
 /* Protected functions                                                                                                */
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+
 /*--------------------------------------------------------------------------------------------------------------------
 Function: UserApp1Initialize
 
@@ -87,10 +95,29 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+  UartConfigurationType sUartConfig; 
+  
+  for (u16 i = 0; i < USERAPP_RX_BUFFER_SIZE; i++)
+  {
+    UserApp_au8RxBuffer[i] = 0;
+  }
+  
+  UserApp_pu8RxBufferParser    = &UserApp_au8RxBuffer[0];
+  UserApp_pu8RxBufferNextChar  = &UserApp_au8RxBuffer[0]; 
+  
+  sUartConfig.UartPeripheral     = UART;
+  sUartConfig.pu8RxBufferAddress = &UserApp_au8RxBuffer[0];
+  sUartConfig.pu8RxNextByte      = &UserApp_pu8RxBufferNextChar;
+  sUartConfig.u16RxBufferSize    = USERAPP_RX_BUFFER_SIZE;
+  sUartConfig.fnRxCallback       = UserAppRxCallback;
+  
+  UserApp_Uart = UartRequest(&sUartConfig);
+  
  
   /* If good initialization, set state to Idle */
-  if( 1 )
+  if( UserApp_Uart != NULL )
   {
+    DebugPrintf(UserApp_au8StartupMsg);
     UserApp1_StateMachine = UserApp1SM_Idle;
   }
   else
@@ -101,7 +128,29 @@ void UserApp1Initialize(void)
 
 } /* end UserApp1Initialize() */
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserAppRxCallback()
+
+Description:
+Call back function used when character received.
+
+Requires:
+  - None
+
+Promises:
+  - Safely advances UserApp_pu8RxBufferNextChar.
+*/
+void UserAppRxCallback(void)
+{
+  /* Safely advance the NextChar pointer */
+  UserApp_pu8RxBufferNextChar++;
+  if(UserApp_pu8RxBufferNextChar == &UserApp_au8RxBuffer[USERAPP_RX_BUFFER_SIZE])
+  {
+    UserApp_pu8RxBufferNextChar = &UserApp_au8RxBuffer[0];
+  }
   
+} /* end DebugRxCallback() */
+
 /*----------------------------------------------------------------------------------------------------------------------
 Function UserApp1RunActiveState()
 
@@ -136,6 +185,20 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  u8 au8CurrentByte[] = " ";
+  
+  /* Parse any new characters that have come in until no more chars */
+  while( (UserApp_pu8RxBufferParser != UserApp_pu8RxBufferNextChar) )
+  {
+    /* Grab a copy of the current byte and echo it back */
+    au8CurrentByte[0] = *UserApp_pu8RxBufferParser;
+    DebugPrintf(au8CurrentByte);
+    UserApp_pu8RxBufferParser++;
+    if(UserApp_pu8RxBufferParser >= &UserApp_au8RxBuffer[USERAPP_RX_BUFFER_SIZE])
+    {
+      UserApp_pu8RxBufferParser = &UserApp_au8RxBuffer[0];
+    }
+  }
 
 } /* end UserApp1SM_Idle() */
     

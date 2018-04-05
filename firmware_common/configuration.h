@@ -407,7 +407,7 @@ The Blade UART is used for the daughter board interface (serial: 115.2k, 8-N-1) 
 
 
 /* USART Interrupt Enable Register - Page 741 */
-#define BLADE_US_IER_INIT (u32)0x00000000
+#define BLADE_US_IER_INIT (u32)0x00000018
 /*
     31 [0] Reserved
     30 [0] "
@@ -442,9 +442,9 @@ The Blade UART is used for the daughter board interface (serial: 115.2k, 8-N-1) 
     07 [0] PARE Parity Error interrupt not enabled
     06 [0] FRAME Framing Error interrupt not enabled
     05 [0] OVRE Overrun Error interrupt not enabled
-    04 [0] ENDTX End of Transmitter Transfer (PDC) interrupt enabled
+    04 [1] ENDTX End of Transmitter Transfer (PDC) interrupt enabled
 
-    03 [0] ENDRX End of Receiver Transfer (PDC) interrupt enabled
+    03 [1] ENDRX End of Receiver Transfer (PDC) interrupt enabled
     02 [0] RXBRK Break Received interrupt not enabled
     01 [0] TXRDY Transmitter Ready interrupt not enabled
     00 [0] RXRDY Receiver Ready interrupt not enabled
