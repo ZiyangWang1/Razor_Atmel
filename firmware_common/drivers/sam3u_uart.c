@@ -327,6 +327,12 @@ UartPeripheralType* UartRequest(UartConfigurationType* psUartConfig_)
   /* Activate and configure the peripheral */
   AT91C_BASE_PMC->PMC_PCER |= (1 << psRequestedUart->u8PeripheralId);
 
+  /* Preset the receive PDC pointers and counters; the receive buffer must be starting from [0] and be at least 2 bytes long)*/
+  psRequestedUart->pBaseAddress->US_RPR  = (unsigned int)psUartConfig_->pu8RxBufferAddress;
+  psRequestedUart->pBaseAddress->US_RNPR = (unsigned int)((psUartConfig_->pu8RxBufferAddress) + 1);
+  psRequestedUart->pBaseAddress->US_RCR  = 1;
+  psRequestedUart->pBaseAddress->US_RNCR = 1;
+  
   psRequestedUart->pu8RxBuffer     = psUartConfig_->pu8RxBufferAddress;
   psRequestedUart->u16RxBufferSize = psUartConfig_->u16RxBufferSize;
   psRequestedUart->pu8RxNextByte   = psUartConfig_->pu8RxNextByte;
@@ -339,11 +345,6 @@ UartPeripheralType* UartRequest(UartConfigurationType* psUartConfig_)
   psRequestedUart->pBaseAddress->US_IDR  = u32TargetIDR;
   psRequestedUart->pBaseAddress->US_BRGR = u32TargetBRGR;
 
-  /* Preset the receive PDC pointers and counters; the receive buffer must be starting from [0] and be at least 2 bytes long)*/
-  psRequestedUart->pBaseAddress->US_RPR  = (unsigned int)psUartConfig_->pu8RxBufferAddress;
-  psRequestedUart->pBaseAddress->US_RNPR = (unsigned int)((psUartConfig_->pu8RxBufferAddress) + 1);
-  psRequestedUart->pBaseAddress->US_RCR  = 1;
-  psRequestedUart->pBaseAddress->US_RNCR = 1;
   
   /* Enable the receiver and transmitter requests */
   psRequestedUart->pBaseAddress->US_PTCR = AT91C_PDC_RXTEN | AT91C_PDC_TXTEN;
