@@ -176,6 +176,40 @@ void UserApp1RunActiveState(void)
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function: HexToChar
+
+Description:
+Change a 8-bit-number to Hex-ascii formation
+
+Requires:
+  - A 8-bit-number input
+  - A pointer to store location
+
+Promises:
+  - The store location needs at least 2 bytes
+*/
+void HexToChar(u8 u8HexInput_,u8* pu8Buffer)
+{
+  if(u8HexInput_ / 16 < 10)
+  {
+    *pu8Buffer = u8HexInput_ / 16 + '0';
+  }
+  else
+  {
+    *pu8Buffer = u8HexInput_ / 16 - 10 + 'A';
+  }
+  
+  if(u8HexInput_ % 16 < 10)
+  {
+    *(pu8Buffer+1) = u8HexInput_ % 16 + '0';
+  }
+  else
+  {
+    *(pu8Buffer+1) = u8HexInput_ % 16 - 10 + 'A';
+  }
+  return;
+}
 
 /**********************************************************************************************************************
 State Machine Function Definitions
@@ -186,13 +220,29 @@ State Machine Function Definitions
 static void UserApp1SM_Idle(void)
 {
   u8 au8CurrentByte[] = " ";
+  u8 au8Display[] = "   ";
+  static u8 au8Message[30] = "                              ";
+  bool bMessagePrinted = TRUE;
+  static u8 u8Counter = 0;
   
   /* Parse any new characters that have come in until no more chars */
   while( (UserApp_pu8RxBufferParser != UserApp_pu8RxBufferNextChar) )
   {
     /* Grab a copy of the current byte and echo it back */
     au8CurrentByte[0] = *UserApp_pu8RxBufferParser;
-    DebugPrintf(au8CurrentByte);
+    u8Counter++;
+    u8Counter++;
+    if(au8CurrentByte[0] == 0x55)
+    {
+      DebugPrintf(au8Message);
+      for(int i = 0; i<30;i++)
+      {
+        au8Message[i] = ' ';
+      }
+      u8Counter = 0;
+    }
+    
+    HexToChar(au8CurrentByte[0],au8Message + u8Counter);
     UserApp_pu8RxBufferParser++;
     if(UserApp_pu8RxBufferParser >= &UserApp_au8RxBuffer[USERAPP_RX_BUFFER_SIZE])
     {
