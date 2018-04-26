@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-1910462119
+Checksum=-1775255027
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -24,6 +24,8 @@ CStepIntDis=_ 0
 TraceBufferSize=0x00010000
 TraceStallIfFIFOFull=0x00000000
 TracePortSize=0x00000000
+[array_types]
+Fmt0=u8[11]	4	0
 [watch_formats]
 Fmt0={W}3:UART_u8ActiveUarts	3	0
 [Log file]
@@ -45,8 +47,7 @@ Exclusions=
 mode=0
 [Breakpoints2]
 Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\..\firmware_common\drivers\sam3u_uart.c}.973.5" 0 0 1 "" 0 "" 0
-Bp1=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\..\firmware_common\application\user_app1.c}.237.7" 0 0 1 "" 0 "" 0
-Count=2
+Count=1
 [Aliases]
 Count=0
 SuppressDialog=0

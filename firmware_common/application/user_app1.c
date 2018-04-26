@@ -97,6 +97,7 @@ void UserApp1Initialize(void)
 {
   UartConfigurationType sUartConfig; 
   
+  LCDCommand(LCD_CLEAR_CMD);
   for (u16 i = 0; i < USERAPP_RX_BUFFER_SIZE; i++)
   {
     UserApp_au8RxBuffer[i] = 0;
@@ -220,29 +221,70 @@ State Machine Function Definitions
 static void UserApp1SM_Idle(void)
 {
   u8 au8CurrentByte[] = " ";
-  u8 au8Display[] = "   ";
-  static u8 au8Message[30] = "                              ";
-  bool bMessagePrinted = TRUE;
-  static u8 u8Counter = 0;
+  static u8 au8SenserData[11];
+  static u8 au8LcdMessage1[] = "Pitch:    .  degree";
+  static u8 au8LcdMessage2[] = "Steps:    ";
+  static u8 u8ByteCounter = 0;
+  static u8 u8PackageCounter = 0;
+  static bool bChecked = TRUE;
+  static s32 s32Pitch = 0;
+  static s32 s32LastPitch = 0;
+  static u16 u16Steps = 0;
   
   /* Parse any new characters that have come in until no more chars */
   while( (UserApp_pu8RxBufferParser != UserApp_pu8RxBufferNextChar) )
   {
     /* Grab a copy of the current byte and echo it back */
     au8CurrentByte[0] = *UserApp_pu8RxBufferParser;
-    u8Counter++;
-    u8Counter++;
-    if(au8CurrentByte[0] == 0x55)
+    
+    if(au8CurrentByte[0] == 0x52)
     {
-      DebugPrintf(au8Message);
-      for(int i = 0; i<30;i++)
-      {
-        au8Message[i] = ' ';
-      }
-      u8Counter = 0;
+      u8PackageCounter++;
     }
     
-    HexToChar(au8CurrentByte[0],au8Message + u8Counter);
+    if(u8PackageCounter == 20)
+    {
+      u8PackageCounter = 0;
+      bChecked = FALSE;
+    }
+    
+    if(!bChecked)
+    {
+      au8SenserData[u8ByteCounter] = au8CurrentByte[0];
+      u8ByteCounter++;
+      if(u8ByteCounter == 11)
+      {
+        u8ByteCounter = 0;
+        bChecked = TRUE;
+        s32Pitch = ((s32)((s16)(au8SenserData[4]<<8) | au8SenserData[3])) * 1800 / 32768;
+        if((s32LastPitch > 10 && s32Pitch < -10 ) )//|| (s32LastPitch < -10 && s32Pitch > 10))
+        {
+          u16Steps++;
+        }
+        s32LastPitch = s32Pitch;
+        if(s32Pitch < 0)
+        {
+          au8LcdMessage1[6] = '-';
+          s32Pitch *= -1;
+        }
+        else
+        {
+          au8LcdMessage1[6] = '+';
+        }
+        au8LcdMessage1[7] = s32Pitch / 1000 + '0';
+        au8LcdMessage1[8] = s32Pitch % 1000 / 100 + '0';
+        au8LcdMessage1[9] = s32Pitch % 100 / 10 + '0';
+        au8LcdMessage1[11] = s32Pitch % 10 + '0';
+        au8LcdMessage2[6] = u16Steps / 1000 + '0';
+        au8LcdMessage2[7] = u16Steps % 1000 / 100 + '0';
+        au8LcdMessage2[8] = u16Steps % 100 / 10 + '0';
+        au8LcdMessage2[9] = u16Steps % 10 + '0';
+        LCDCommand(LCD_CLEAR_CMD);
+        LCDMessage(LINE1_START_ADDR,au8LcdMessage1);
+        LCDMessage(LINE2_START_ADDR,au8LcdMessage2);
+      }
+    }
+    
     UserApp_pu8RxBufferParser++;
     if(UserApp_pu8RxBufferParser >= &UserApp_au8RxBuffer[USERAPP_RX_BUFFER_SIZE])
     {
