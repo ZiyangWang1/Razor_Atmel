@@ -29,14 +29,15 @@ Type Definitions
 Constants / Definitions
 **********************************************************************************************************************/
 /* Pin definition */
+#define PA_00_GND        PA_00_TP54
 #define PA_03_CD_STB     PA_03_HSMCI_MCCK
 #define PA_04_INH        PA_04_HSMCI_MCCDA
 #define PA_05_A          PA_05_HSMCI_MCDA0
 #define PA_06_B          PA_06_HSMCI_MCDA1
 #define PA_07_C          PA_07_HSMCI_MCDA2
 #define PA_08_D          PA_08_SD_CS_MCDA3
-#define PA_09_I2C_SDA    PA_09_I2C_SDA
-#define PA_10_I2C_SCL    PA_10_I2C_SCL
+#define PA_09_I2C_M_SDA    PA_09_I2C_SDA
+#define PA_10_I2C_M_SCL    PA_10_I2C_SCL
 #define PA_11_M_OE       PA_11_BLADE_UPIMO
 #define PA_12_M_LE       PA_12_BLADE_UPOMI
 #define PA_14_M_SDI      PA_14_BLADE_MOSI
@@ -67,7 +68,7 @@ void UserApp1RunActiveState(void);
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
-
+static void UserApp1_CD4515BM_ChangeData(u8 u8Data);
 
 /***********************************************************************************************************************
 State Machine Declarations

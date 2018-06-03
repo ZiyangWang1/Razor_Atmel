@@ -87,32 +87,35 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  SspConfigurationType UserApp1_SpiMasterConfig;
-  
-  UserApp1_SpiMasterConfig.SspPeripheral = SPI;
-  UserApp1_SpiMasterConfig.pCsGpioAddress = AT91C_BASE_PIOA;
-  
   
   /* Enable PIO and output */
+  AT91C_BASE_PIOA->PIO_PER = PA_00_GND;
   AT91C_BASE_PIOA->PIO_PER = PA_03_CD_STB;
   AT91C_BASE_PIOA->PIO_PER = PA_04_INH;
   AT91C_BASE_PIOA->PIO_PER = PA_05_A;
   AT91C_BASE_PIOA->PIO_PER = PA_06_B;
   AT91C_BASE_PIOA->PIO_PER = PA_07_C;
   AT91C_BASE_PIOA->PIO_PER = PA_08_D;
+  AT91C_BASE_PIOA->PIO_PER = PA_11_M_OE;
   AT91C_BASE_PIOA->PIO_PER = PA_12_M_LE;
+  AT91C_BASE_PIOA->PIO_PER = PA_14_M_SDI;
+  AT91C_BASE_PIOA->PIO_PER = PA_15_M_CLK;
   AT91C_BASE_PIOB->PIO_PER = PB_05_F_CS;
   AT91C_BASE_PIOB->PIO_PER = PB_06_F_SDO;
   AT91C_BASE_PIOB->PIO_PER = PB_07_SCLK;
   AT91C_BASE_PIOB->PIO_PER = PB_08_SI;
   
+  AT91C_BASE_PIOA->PIO_OER = PA_00_GND;
   AT91C_BASE_PIOA->PIO_OER = PA_03_CD_STB;
   AT91C_BASE_PIOA->PIO_OER = PA_04_INH;
   AT91C_BASE_PIOA->PIO_OER = PA_05_A;
   AT91C_BASE_PIOA->PIO_OER = PA_06_B;
   AT91C_BASE_PIOA->PIO_OER = PA_07_C;
   AT91C_BASE_PIOA->PIO_OER = PA_08_D;
+  AT91C_BASE_PIOA->PIO_OER = PA_11_M_OE;
   AT91C_BASE_PIOA->PIO_OER = PA_12_M_LE;
+  AT91C_BASE_PIOA->PIO_OER = PA_14_M_SDI;
+  AT91C_BASE_PIOA->PIO_OER = PA_15_M_CLK;
   AT91C_BASE_PIOB->PIO_OER = PB_05_F_CS;
   AT91C_BASE_PIOB->PIO_OER = PB_06_F_SDO;
   AT91C_BASE_PIOB->PIO_OER = PB_07_SCLK;
@@ -120,14 +123,17 @@ void UserApp1Initialize(void)
   
   /* Initialize the GPIO ports */
   
+  AT91C_BASE_PIOA->PIO_CODR = PA_00_GND;
   AT91C_BASE_PIOA->PIO_SODR = PA_03_CD_STB;
-  AT91C_BASE_PIOA->PIO_SODR = PA_04_INH;
+  AT91C_BASE_PIOA->PIO_CODR = PA_04_INH;
   AT91C_BASE_PIOA->PIO_CODR = PA_05_A;
   AT91C_BASE_PIOA->PIO_CODR = PA_06_B;
   AT91C_BASE_PIOA->PIO_CODR = PA_07_C;
   AT91C_BASE_PIOA->PIO_CODR = PA_08_D;
-  AT91C_BASE_PIOA->PIO_SODR = PA_11_M_OE;
-  AT91C_BASE_PIOA->PIO_CODR = PA_12_M_LE;
+  AT91C_BASE_PIOA->PIO_CODR = PA_11_M_OE;
+  AT91C_BASE_PIOA->PIO_SODR = PA_12_M_LE;
+  AT91C_BASE_PIOA->PIO_CODR = PA_14_M_SDI;
+  AT91C_BASE_PIOA->PIO_CODR = PA_15_M_CLK;
   AT91C_BASE_PIOB->PIO_SODR = PB_05_F_CS;
   AT91C_BASE_PIOB->PIO_CODR = PB_06_F_SDO;
   AT91C_BASE_PIOB->PIO_CODR = PB_07_SCLK;
@@ -135,7 +141,7 @@ void UserApp1Initialize(void)
   
   
   /* If good initialization, set state to Idle */
-  if( 1 )
+  if(1)
   {
     UserApp1_StateMachine = UserApp1SM_Idle;
   }
@@ -173,6 +179,59 @@ void UserApp1RunActiveState(void)
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserApp1_CD4515BM_ChangeData
+
+Description:
+Change the data in the CD4515BM latch and send a falling edge
+
+Requires:
+  - The waitting data
+  - The STB must be high
+
+Promises:
+  - Change the data in the CD4515BM latch
+*/
+static void UserApp1_CD4515BM_ChangeData(u8 u8Data)
+{
+  if(u8Data / 8)
+  {
+    AT91C_BASE_PIOA->PIO_SODR = PA_08_D;
+  }
+  else
+  {
+    AT91C_BASE_PIOA->PIO_CODR = PA_08_D;
+  }
+  
+  if((u8Data % 8) / 4)
+  {
+    AT91C_BASE_PIOA->PIO_SODR = PA_07_C;
+  }
+  else
+  {
+    AT91C_BASE_PIOA->PIO_CODR = PA_07_C;
+  }
+  
+  if((u8Data % 4) / 2)
+  {
+    AT91C_BASE_PIOA->PIO_SODR = PA_06_B;
+  }
+  else
+  {
+    AT91C_BASE_PIOA->PIO_CODR = PA_06_B;
+  }
+  
+  if(u8Data % 2)
+  {
+    AT91C_BASE_PIOA->PIO_SODR = PA_05_A;
+  }
+  else
+  {
+    AT91C_BASE_PIOA->PIO_CODR = PA_05_A;
+  }
+  
+  AT91C_BASE_PIOA->PIO_CODR = PA_03_CD_STB;
+} /* end UserApp1_CD4515BM_ChangeData */
 
 /**********************************************************************************************************************
 State Machine Function Definitions
@@ -182,6 +241,47 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  static u8 u8CD4515BMTimeCounter = 0;
+  static u8 u8CD4515Data = 0;
+  static bool bMBI5026GFDataSend = FALSE;
+  static u8 u8MBI5026GFCounter = 0;
+  
+  if(!(AT91C_BASE_PIOA->PIO_ODSR & PA_15_BLADE_SCK))
+  {
+    AT91C_BASE_PIOA->PIO_SODR = PA_03_CD_STB;
+  }
+  
+  u8CD4515BMTimeCounter++;
+  UserApp1_CD4515BM_ChangeData(u8CD4515Data);
+  u8CD4515Data++;
+  if(u8CD4515Data == 16)
+  {
+    u8CD4515Data = 0;
+  }
+  
+  if(!bMBI5026GFDataSend)
+  {
+      u8MBI5026GFCounter++;
+      switch(u8MBI5026GFCounter)
+      {
+      case 1:;
+      case 3:;
+      case 5:;
+      case 7:;
+      case 9:AT91C_BASE_PIOA->PIO_SODR = PA_15_M_CLK;break;
+      
+      case 2:;
+      case 4:;
+      case 6:;
+      case 8:;
+      case 10: AT91C_BASE_PIOA->PIO_SODR = PA_14_M_SDI;
+               AT91C_BASE_PIOA->PIO_CODR = PA_15_M_CLK;
+               break;
+      default: u8MBI5026GFCounter = 0;bMBI5026GFDataSend = TRUE;AT91C_BASE_PIOA->PIO_CODR = PA_12_M_LE;
+      }
+  }
+  
+  
 
 } /* end UserApp1SM_Idle() */
     
