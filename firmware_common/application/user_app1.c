@@ -87,6 +87,7 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+  LedOff(BLUE);
   
   /* Enable PIO and output */
   AT91C_BASE_PIOA->PIO_PER = PA_00_GND;
@@ -231,7 +232,55 @@ static void UserApp1_CD4515BM_ChangeData(u8 u8Data)
   }
   
   AT91C_BASE_PIOA->PIO_CODR = PA_03_CD_STB;
+  
+  for(int i=0;i<100;)
+  {
+    i++;
+  }
+  
+  AT91C_BASE_PIOA->PIO_SODR = PA_03_CD_STB;
+  
 } /* end UserApp1_CD4515BM_ChangeData */
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserApp1_MBI5026GF_SendData
+
+Description:
+Send a byte to the MBI5026GF
+
+Requires:
+  - The waitting data
+  - The M_LE must be high
+  - The M_OE must be low
+
+Promises:
+  - Send a byte to the MBI5026GF
+*/
+static void UserApp1_MBI5026GF_SendData(u8 u8Data)
+{
+  u8 u8Mask = 0x01;
+  
+  for(int i=0;i<8;i++)
+  {
+    if(u8Data & (u8Mask << i))
+    {
+      AT91C_BASE_PIOA->PIO_SODR = PA_14_M_SDI;
+    }
+    else
+    {
+      AT91C_BASE_PIOA->PIO_CODR = PA_14_M_SDI;
+    }
+    
+    AT91C_BASE_PIOA->PIO_CODR = PA_15_M_CLK;
+    
+    
+    AT91C_BASE_PIOA->PIO_SODR = PA_15_M_CLK;
+    
+    
+  }
+  
+} /* end UserApp1_MBI5026GF_SendData */
+
 
 /**********************************************************************************************************************
 State Machine Function Definitions
@@ -241,48 +290,173 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  static u8 u8CD4515BMTimeCounter = 0;
+  bool bRollTemp = FALSE;
   static u8 u8CD4515Data = 0;
-  static bool bMBI5026GFDataSend = FALSE;
-  static u8 u8MBI5026GFCounter = 0;
-  
-  if(!(AT91C_BASE_PIOA->PIO_ODSR & PA_15_BLADE_SCK))
+  static u16 u16RollCounter = 0;
+  static u8 u8MBI5026GFData[5][16][2] = 
   {
-    AT91C_BASE_PIOA->PIO_SODR = PA_03_CD_STB;
+    {{0x00,0x00},
+    {0x1F,0xF0},
+    {0x10,0x10},
+    {0x1F,0xF0},
+    {0x10,0x10},
+    {0x1F,0xF0},
+    {0x01,0x00},
+    {0x11,0x00},
+    {0x1F,0xF8},
+    {0x21,0x00},
+    {0x41,0x00},
+    {0x1F,0xF0},
+    {0x01,0x00},
+    {0x01,0x00},
+    {0x7F,0xFC},
+    {0x00,0x00},},
+  
+    {{0x00,0x00},
+    {0x7F,0xFC},
+    {0x00,0x10},
+    {0x1F,0x90},
+    {0x10,0x90},
+    {0x10,0x90},
+    {0x1F,0x90},
+    {0x00,0x00},
+    {0xFF,0xFE},
+    {0x00,0x10},
+    {0x1F,0x90},
+    {0x10,0x90},
+    {0x10,0x90},
+    {0x1F,0x90},
+    {0x00,0x50},
+    {0x00,0x20},},
+  
+    {{0x01,0x00},
+    {0x01,0x00},
+    {0x01,0x00},
+    {0x01,0x00},
+    {0x01,0x00},
+    {0xFF,0xFE},
+    {0x01,0x00},
+    {0x01,0x00},
+    {0x02,0x80},
+    {0x02,0x80},
+    {0x04,0x40},
+    {0x04,0x40},
+    {0x08,0x20},
+    {0x10,0x10},
+    {0x20,0x08},
+    {0xC0,0x06},},
+  
+    {{0x08,0x20},
+    {0x08,0x20},
+    {0x48,0x20},
+    {0x48,0x20},
+    {0x49,0xFC},
+    {0x49,0x24},
+    {0x49,0x24},
+    {0x49,0x24},
+    {0x49,0x24},
+    {0x49,0x24},
+    {0x49,0x24},
+    {0x09,0x34},
+    {0x11,0x28},
+    {0x10,0x20},
+    {0x20,0x20},
+    {0x40,0x20},},
+  
+    {{0x00,0x80},
+    {0x20,0x80},
+    {0x20,0x80},
+    {0x20,0x84},
+    {0x20,0x88},
+    {0x20,0x90},
+    {0x3E,0xA0},
+    {0x20,0xC0},
+    {0x20,0x80},
+    {0x20,0x80},
+    {0x20,0x80},
+    {0x20,0x82},
+    {0x26,0x82},
+    {0x38,0x82},
+    {0x20,0x7E},
+    {0x00,0x00},}
+  };
+  
+  u16RollCounter++;
+  AT91C_BASE_PIOA->PIO_SODR = PA_11_M_OE;
+
+  if(u16RollCounter == 50)
+  {
+    u16RollCounter = 0;
+    for(int j=0;j<16;j++)
+    {
+      bRollTemp = u8MBI5026GFData[4][j][1] & 0x01;
+      for(int i=5;i>0;i--)
+      {
+        u8MBI5026GFData[i-1][j][1] = u8MBI5026GFData[i-1][j][1] >> 1;
+        
+        if(u8MBI5026GFData[i-1][j][0] & 0x01)
+        {
+          u8MBI5026GFData[i-1][j][1] = u8MBI5026GFData[i-1][j][1] | 0x80;
+        }
+        else
+        {
+          u8MBI5026GFData[i-1][j][1] = u8MBI5026GFData[i-1][j][1] & 0x7F;
+        }
+        
+        u8MBI5026GFData[i-1][j][0] = u8MBI5026GFData[i-1][j][0] >> 1;
+        
+        if(i == 1)
+        {
+          if(bRollTemp)
+          {
+            u8MBI5026GFData[i-1][j][0] = u8MBI5026GFData[i-1][j][0] | 0x80;
+          }
+          else
+          {
+            u8MBI5026GFData[i-1][j][0] = u8MBI5026GFData[i-1][j][0] & 0x7F;
+          }
+        }
+        else
+        {
+          if(u8MBI5026GFData[i-2][j][1] & 0x01)
+          {
+            u8MBI5026GFData[i-1][j][0] = u8MBI5026GFData[i-1][j][0] | 0x80;
+          }
+          else
+          {
+            u8MBI5026GFData[i-1][j][0] = u8MBI5026GFData[i-1][j][0] & 0x7F;
+          }
+        }
+        
+      }
+    }
   }
   
-  u8CD4515BMTimeCounter++;
+  
   UserApp1_CD4515BM_ChangeData(u8CD4515Data);
+  
+  for(int i=5;i>0;i--)
+  {
+    UserApp1_MBI5026GF_SendData(u8MBI5026GFData[i-1][u8CD4515Data][1]);
+    UserApp1_MBI5026GF_SendData(u8MBI5026GFData[i-1][u8CD4515Data][0]);
+  }
+
+  AT91C_BASE_PIOA->PIO_SODR = PA_12_M_LE;
+  
+  for(int j=0;j<10;)
+  {
+    j++;
+  }
+  
+  AT91C_BASE_PIOA->PIO_CODR = PA_12_M_LE;
   u8CD4515Data++;
+  
   if(u8CD4515Data == 16)
   {
     u8CD4515Data = 0;
   }
   
-  if(!bMBI5026GFDataSend)
-  {
-      u8MBI5026GFCounter++;
-      switch(u8MBI5026GFCounter)
-      {
-      case 1:;
-      case 3:;
-      case 5:;
-      case 7:;
-      case 9:AT91C_BASE_PIOA->PIO_SODR = PA_15_M_CLK;break;
-      
-      case 2:;
-      case 4:;
-      case 6:;
-      case 8:;
-      case 10: AT91C_BASE_PIOA->PIO_SODR = PA_14_M_SDI;
-               AT91C_BASE_PIOA->PIO_CODR = PA_15_M_CLK;
-               break;
-      default: u8MBI5026GFCounter = 0;bMBI5026GFDataSend = TRUE;AT91C_BASE_PIOA->PIO_CODR = PA_12_M_LE;
-      }
-  }
-  
-  
-
+  AT91C_BASE_PIOA->PIO_CODR = PA_11_M_OE;
 } /* end UserApp1SM_Idle() */
     
 
