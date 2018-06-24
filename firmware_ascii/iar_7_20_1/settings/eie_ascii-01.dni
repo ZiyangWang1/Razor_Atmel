@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=142591273
+Checksum=1725116481
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -24,6 +24,11 @@ CStepIntDis=_ 0
 TraceBufferSize=0x00010000
 TraceStallIfFIFOFull=0x00000000
 TracePortSize=0x00000000
+[struct_types]
+Fmt0=DisplayListHeadType-u8ListSize	3	0
+Fmt1=DisplayListNodeType-u8DataNumber	3	0
+[array_types]
+Fmt0=u8[2]	4	0
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""

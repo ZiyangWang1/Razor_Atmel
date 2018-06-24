@@ -60,6 +60,8 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
+TWIPeripheralType FM24CL16B;
+
 
 /**********************************************************************************************************************
 Function Definitions
@@ -91,54 +93,58 @@ void UserApp1Initialize(void)
   
   /* Enable PIO and output */
   AT91C_BASE_PIOA->PIO_PER = PA_00_GND;
-  AT91C_BASE_PIOA->PIO_PER = PA_03_CD_STB;
-  AT91C_BASE_PIOA->PIO_PER = PA_04_INH;
-  AT91C_BASE_PIOA->PIO_PER = PA_05_A;
-  AT91C_BASE_PIOA->PIO_PER = PA_06_B;
-  AT91C_BASE_PIOA->PIO_PER = PA_07_C;
-  AT91C_BASE_PIOA->PIO_PER = PA_08_D;
-  AT91C_BASE_PIOA->PIO_PER = PA_11_M_OE;
-  AT91C_BASE_PIOA->PIO_PER = PA_12_M_LE;
-  AT91C_BASE_PIOA->PIO_PER = PA_14_M_SDI;
-  AT91C_BASE_PIOA->PIO_PER = PA_15_M_CLK;
-  AT91C_BASE_PIOB->PIO_PER = PB_05_F_CS;
-  AT91C_BASE_PIOB->PIO_PER = PB_06_F_SDO;
-  AT91C_BASE_PIOB->PIO_PER = PB_07_SCLK;
-  AT91C_BASE_PIOB->PIO_PER = PB_08_SI;
+  AT91C_BASE_PIOA->PIO_PER = PA_05_CD_STB;
+  AT91C_BASE_PIOA->PIO_PER = PA_08_INH;
+  AT91C_BASE_PIOA->PIO_PER = PA_03_A;
+  AT91C_BASE_PIOA->PIO_PER = PA_07_B;
+  AT91C_BASE_PIOA->PIO_PER = PA_06_C;
+  AT91C_BASE_PIOA->PIO_PER = PA_04_D;
+  AT91C_BASE_PIOA->PIO_PER = PA_09_I2C_M_SCL;
+  AT91C_BASE_PIOA->PIO_PER = PA_10_I2C_M_SDA;
+  AT91C_BASE_PIOA->PIO_PER = PA_12_M_OE;
+  AT91C_BASE_PIOA->PIO_PER = PA_11_M_LE;
+  AT91C_BASE_PIOA->PIO_PER = PA_15_M_SDI;
+  AT91C_BASE_PIOA->PIO_PER = PA_14_M_CLK;
+  AT91C_BASE_PIOB->PIO_PER = PB_06_F_CS;
+  AT91C_BASE_PIOB->PIO_PER = PB_05_F_SDO;
+  AT91C_BASE_PIOB->PIO_PER = PB_08_SCLK;
+  AT91C_BASE_PIOB->PIO_PER = PB_07_SI;
   
   AT91C_BASE_PIOA->PIO_OER = PA_00_GND;
-  AT91C_BASE_PIOA->PIO_OER = PA_03_CD_STB;
-  AT91C_BASE_PIOA->PIO_OER = PA_04_INH;
-  AT91C_BASE_PIOA->PIO_OER = PA_05_A;
-  AT91C_BASE_PIOA->PIO_OER = PA_06_B;
-  AT91C_BASE_PIOA->PIO_OER = PA_07_C;
-  AT91C_BASE_PIOA->PIO_OER = PA_08_D;
-  AT91C_BASE_PIOA->PIO_OER = PA_11_M_OE;
-  AT91C_BASE_PIOA->PIO_OER = PA_12_M_LE;
-  AT91C_BASE_PIOA->PIO_OER = PA_14_M_SDI;
-  AT91C_BASE_PIOA->PIO_OER = PA_15_M_CLK;
-  AT91C_BASE_PIOB->PIO_OER = PB_05_F_CS;
-  AT91C_BASE_PIOB->PIO_OER = PB_06_F_SDO;
-  AT91C_BASE_PIOB->PIO_OER = PB_07_SCLK;
-  AT91C_BASE_PIOB->PIO_OER = PB_08_SI;
+  AT91C_BASE_PIOA->PIO_OER = PA_05_CD_STB;
+  AT91C_BASE_PIOA->PIO_OER = PA_08_INH;
+  AT91C_BASE_PIOA->PIO_OER = PA_03_A;
+  AT91C_BASE_PIOA->PIO_OER = PA_07_B;
+  AT91C_BASE_PIOA->PIO_OER = PA_06_C;
+  AT91C_BASE_PIOA->PIO_OER = PA_04_D;
+  AT91C_BASE_PIOA->PIO_OER = PA_09_I2C_M_SCL;
+  AT91C_BASE_PIOA->PIO_OER = PA_10_I2C_M_SDA;
+  AT91C_BASE_PIOA->PIO_OER = PA_12_M_OE;
+  AT91C_BASE_PIOA->PIO_OER = PA_11_M_LE;
+  AT91C_BASE_PIOA->PIO_OER = PA_15_M_SDI;
+  AT91C_BASE_PIOA->PIO_OER = PA_14_M_CLK;
+  AT91C_BASE_PIOB->PIO_OER = PB_06_F_CS;
+  AT91C_BASE_PIOB->PIO_OER = PB_05_F_SDO;
+  AT91C_BASE_PIOB->PIO_OER = PB_08_SCLK;
+  AT91C_BASE_PIOB->PIO_OER = PB_07_SI;
   
   /* Initialize the GPIO ports */
   
   AT91C_BASE_PIOA->PIO_CODR = PA_00_GND;
-  AT91C_BASE_PIOA->PIO_SODR = PA_03_CD_STB;
-  AT91C_BASE_PIOA->PIO_CODR = PA_04_INH;
-  AT91C_BASE_PIOA->PIO_CODR = PA_05_A;
-  AT91C_BASE_PIOA->PIO_CODR = PA_06_B;
-  AT91C_BASE_PIOA->PIO_CODR = PA_07_C;
-  AT91C_BASE_PIOA->PIO_CODR = PA_08_D;
-  AT91C_BASE_PIOA->PIO_CODR = PA_11_M_OE;
-  AT91C_BASE_PIOA->PIO_SODR = PA_12_M_LE;
-  AT91C_BASE_PIOA->PIO_CODR = PA_14_M_SDI;
-  AT91C_BASE_PIOA->PIO_CODR = PA_15_M_CLK;
-  AT91C_BASE_PIOB->PIO_SODR = PB_05_F_CS;
-  AT91C_BASE_PIOB->PIO_CODR = PB_06_F_SDO;
-  AT91C_BASE_PIOB->PIO_CODR = PB_07_SCLK;
-  AT91C_BASE_PIOB->PIO_CODR = PB_08_SI;
+  AT91C_BASE_PIOA->PIO_SODR = PA_05_CD_STB;
+  AT91C_BASE_PIOA->PIO_CODR = PA_08_INH;
+  AT91C_BASE_PIOA->PIO_CODR = PA_03_A;
+  AT91C_BASE_PIOA->PIO_CODR = PA_07_B;
+  AT91C_BASE_PIOA->PIO_CODR = PA_06_C;
+  AT91C_BASE_PIOA->PIO_CODR = PA_04_D;
+  AT91C_BASE_PIOA->PIO_CODR = PA_12_M_OE;
+  AT91C_BASE_PIOA->PIO_SODR = PA_11_M_LE;
+  AT91C_BASE_PIOA->PIO_CODR = PA_15_M_SDI;
+  AT91C_BASE_PIOA->PIO_CODR = PA_14_M_CLK;
+  AT91C_BASE_PIOB->PIO_SODR = PB_06_F_CS;
+  AT91C_BASE_PIOB->PIO_CODR = PB_05_F_SDO;
+  AT91C_BASE_PIOB->PIO_CODR = PB_08_SCLK;
+  AT91C_BASE_PIOB->PIO_CODR = PB_07_SI;
   
   
   /* If good initialization, set state to Idle */
@@ -197,48 +203,45 @@ static void UserApp1_CD4515BM_ChangeData(u8 u8Data)
 {
   if(u8Data / 8)
   {
-    AT91C_BASE_PIOA->PIO_SODR = PA_08_D;
+    AT91C_BASE_PIOA->PIO_SODR = PA_04_D;
   }
   else
   {
-    AT91C_BASE_PIOA->PIO_CODR = PA_08_D;
+    AT91C_BASE_PIOA->PIO_CODR = PA_04_D;
   }
   
   if((u8Data % 8) / 4)
   {
-    AT91C_BASE_PIOA->PIO_SODR = PA_07_C;
+    AT91C_BASE_PIOA->PIO_SODR = PA_06_C;
   }
   else
   {
-    AT91C_BASE_PIOA->PIO_CODR = PA_07_C;
+    AT91C_BASE_PIOA->PIO_CODR = PA_06_C;
   }
   
   if((u8Data % 4) / 2)
   {
-    AT91C_BASE_PIOA->PIO_SODR = PA_06_B;
+    AT91C_BASE_PIOA->PIO_SODR = PA_07_B;
   }
   else
   {
-    AT91C_BASE_PIOA->PIO_CODR = PA_06_B;
+    AT91C_BASE_PIOA->PIO_CODR = PA_07_B;
   }
   
   if(u8Data % 2)
   {
-    AT91C_BASE_PIOA->PIO_SODR = PA_05_A;
+    AT91C_BASE_PIOA->PIO_SODR = PA_03_A;
   }
   else
   {
-    AT91C_BASE_PIOA->PIO_CODR = PA_05_A;
+    AT91C_BASE_PIOA->PIO_CODR = PA_03_A;
   }
   
-  AT91C_BASE_PIOA->PIO_CODR = PA_03_CD_STB;
+  AT91C_BASE_PIOA->PIO_CODR = PA_05_CD_STB;
   
-  for(int i=0;i<100;)
-  {
-    i++;
-  }
+  for(int i=0;i<5;i++);
   
-  AT91C_BASE_PIOA->PIO_SODR = PA_03_CD_STB;
+  AT91C_BASE_PIOA->PIO_SODR = PA_05_CD_STB;
   
 } /* end UserApp1_CD4515BM_ChangeData */
 
@@ -264,22 +267,44 @@ static void UserApp1_MBI5026GF_SendData(u8 u8Data)
   {
     if(u8Data & (u8Mask << i))
     {
-      AT91C_BASE_PIOA->PIO_SODR = PA_14_M_SDI;
+      AT91C_BASE_PIOA->PIO_SODR = PA_15_M_SDI;
     }
     else
     {
-      AT91C_BASE_PIOA->PIO_CODR = PA_14_M_SDI;
+      AT91C_BASE_PIOA->PIO_CODR = PA_15_M_SDI;
     }
     
-    AT91C_BASE_PIOA->PIO_CODR = PA_15_M_CLK;
+    AT91C_BASE_PIOA->PIO_CODR = PA_14_M_CLK;
     
+    for(int i=0;i<5;i++);
     
-    AT91C_BASE_PIOA->PIO_SODR = PA_15_M_CLK;
+    AT91C_BASE_PIOA->PIO_SODR = PA_14_M_CLK;
     
+    for(int i=0;i<5;i++);
     
   }
   
 } /* end UserApp1_MBI5026GF_SendData */
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserApp1_FM24CL16B_SendData
+
+Description:
+Send data to the required location of FM24CL16B
+
+Requires:
+  - The waitting data
+  - The length of the data
+  - The required location of FM24CL16B
+
+Promises:
+  - Send data to the FM24CL16B
+*/
+static void UserApp1_FM24CL16B_SendData(u8* pu8Data_,u8 u8DataLength,u8 u8WordLocation,u8 u8PageLocation)
+{
+  
+  
+} /* end UserApp1_FM24CL16B_SendData */
 
 
 /**********************************************************************************************************************
@@ -293,138 +318,244 @@ static void UserApp1SM_Idle(void)
   bool bRollTemp = FALSE;
   static u8 u8CD4515Data = 0;
   static u16 u16RollCounter = 0;
-  static u8 u8MBI5026GFData[5][16][2] = 
+  static u8 u8MBI5026GFData[7][16][2] = 
   {
-    {{0x00,0x00},
-    {0x1F,0xF0},
-    {0x10,0x10},
-    {0x1F,0xF0},
-    {0x10,0x10},
-    {0x1F,0xF0},
-    {0x01,0x00},
-    {0x11,0x00},
-    {0x1F,0xF8},
-    {0x21,0x00},
-    {0x41,0x00},
-    {0x1F,0xF0},
-    {0x01,0x00},
-    {0x01,0x00},
-    {0x7F,0xFC},
-    {0x00,0x00},},
+/*    {{0x00,0x80},
+{0x20,0x40},
+{0x10,0x40},
+{0x17,0xFC},
+{0x00,0x10},
+{0x02,0x10},
+{0xF1,0x20},
+{0x10,0xA0},
+{0x10,0x40},
+{0x10,0xA0},
+{0x11,0x10},
+{0x12,0x08},
+{0x14,0x08},
+{0x28,0x00},
+{0x47,0xFE},
+{0x00,0x00},
+    //"这",0
+  },
+  
+    {{0x1F,0xF0},
+{0x10,0x10},
+{0x10,0x10},
+{0x1F,0xF0},
+{0x10,0x10},
+{0x10,0x10},
+{0x1F,0xF0},
+{0x00,0x00},
+{0xFF,0xFE},
+{0x01,0x00},
+{0x11,0x00},
+{0x11,0xF8},
+{0x11,0x00},
+{0x29,0x00},
+{0x45,0x00},
+{0x83,0xFE},
+    //"是",1
+  },*/
   
     {{0x00,0x00},
-    {0x7F,0xFC},
-    {0x00,0x10},
-    {0x1F,0x90},
-    {0x10,0x90},
-    {0x10,0x90},
-    {0x1F,0x90},
-    {0x00,0x00},
-    {0xFF,0xFE},
-    {0x00,0x10},
-    {0x1F,0x90},
-    {0x10,0x90},
-    {0x10,0x90},
-    {0x1F,0x90},
-    {0x00,0x50},
-    {0x00,0x20},},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0xFF,0xFE},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+    //"一",2
+  },
   
     {{0x01,0x00},
-    {0x01,0x00},
-    {0x01,0x00},
-    {0x01,0x00},
-    {0x01,0x00},
-    {0xFF,0xFE},
-    {0x01,0x00},
-    {0x01,0x00},
-    {0x02,0x80},
-    {0x02,0x80},
-    {0x04,0x40},
-    {0x04,0x40},
-    {0x08,0x20},
-    {0x10,0x10},
-    {0x20,0x08},
-    {0xC0,0x06},},
-  
-    {{0x08,0x20},
-    {0x08,0x20},
-    {0x48,0x20},
-    {0x48,0x20},
-    {0x49,0xFC},
-    {0x49,0x24},
-    {0x49,0x24},
-    {0x49,0x24},
-    {0x49,0x24},
-    {0x49,0x24},
-    {0x49,0x24},
-    {0x09,0x34},
-    {0x11,0x28},
-    {0x10,0x20},
-    {0x20,0x20},
-    {0x40,0x20},},
+{0x01,0x00},
+{0x02,0x80},
+{0x04,0x40},
+{0x08,0x20},
+{0x10,0x10},
+{0x21,0x08},
+{0xC1,0x06},
+{0x01,0x00},
+{0x01,0x00},
+{0x01,0x00},
+{0x01,0x00},
+{0x01,0x00},
+{0x01,0x00},
+{0x01,0x00},
+{0x01,0x00},
+    //"个",3
+  },
   
     {{0x00,0x80},
-    {0x20,0x80},
-    {0x20,0x80},
-    {0x20,0x84},
-    {0x20,0x88},
-    {0x20,0x90},
-    {0x3E,0xA0},
-    {0x20,0xC0},
-    {0x20,0x80},
-    {0x20,0x80},
-    {0x20,0x80},
-    {0x20,0x82},
-    {0x26,0x82},
-    {0x38,0x82},
-    {0x20,0x7E},
-    {0x00,0x00},}
+{0x20,0x40},
+{0x17,0xFC},
+{0x11,0x10},
+{0x82,0x48},
+{0x44,0x84},
+{0x41,0x20},
+{0x13,0xF0},
+{0x10,0x10},
+{0x20,0x88},
+{0xE1,0x50},
+{0x23,0x20},
+{0x25,0x10},
+{0x29,0x48},
+{0x21,0x86},
+{0x01,0x00},
+    //"滚",4
+  },
+
+    {{0x00,0x40},
+{0x00,0x40},
+{0x7C,0x40},
+{0x00,0x40},
+{0x01,0xFC},
+{0x00,0x44},
+{0xFE,0x44},
+{0x20,0x44},
+{0x20,0x44},
+{0x20,0x84},
+{0x48,0x84},
+{0x44,0x84},
+{0xFD,0x04},
+{0x45,0x04},
+{0x02,0x28},
+{0x04,0x10},
+//"动",5
+  },
+
+    {{0x00,0x00},
+{0x1F,0xF0},
+{0x10,0x10},
+{0x10,0x10},
+{0x1F,0xF0},
+{0x10,0x10},
+{0x10,0x10},
+{0x1F,0xF0},
+{0x04,0x40},
+{0x44,0x44},
+{0x24,0x44},
+{0x14,0x48},
+{0x14,0x50},
+{0x04,0x40},
+{0xFF,0xFE},
+{0x00,0x00},
+//"显",6
+  },
+
+    {{0x00,0x00},
+{0x3F,0xF8},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0xFF,0xFE},
+{0x01,0x00},
+{0x01,0x00},
+{0x11,0x10},
+{0x11,0x08},
+{0x21,0x04},
+{0x41,0x02},
+{0x81,0x02},
+{0x05,0x00},
+{0x02,0x00},
+//"示",7
+  },
+
+    {{0x00,0x00},
+{0x3F,0xF8},
+{0x20,0x08},
+{0x20,0x08},
+{0x3F,0xF8},
+{0x24,0x10},
+{0x22,0x20},
+{0x2F,0xF8},
+{0x22,0x20},
+{0x22,0x20},
+{0x3F,0xFC},
+{0x22,0x20},
+{0x42,0x20},
+{0x44,0x20},
+{0x84,0x20},
+{0x08,0x20},
+//"屏",8
+  },
+
+/*    {{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x00,0x00},
+{0x18,0x00},
+{0x24,0x00},
+{0x24,0x00},
+{0x18,0x00},
+{0x00,0x00},
+{0x00,0x00},
+//"。",9
+  },*/
   };
   
+  AT91C_BASE_PIOA->PIO_SODR = PA_12_M_OE;
+  
   u16RollCounter++;
-  AT91C_BASE_PIOA->PIO_SODR = PA_11_M_OE;
 
-  if(u16RollCounter == 50)
+  if(u16RollCounter == 100)
   {
     u16RollCounter = 0;
     for(int j=0;j<16;j++)
     {
-      bRollTemp = u8MBI5026GFData[4][j][1] & 0x01;
-      for(int i=5;i>0;i--)
+      bRollTemp = (bool)(u8MBI5026GFData[0][j][0] & 0x80);
+      for(int i=0;i<7;i++)
       {
-        u8MBI5026GFData[i-1][j][1] = u8MBI5026GFData[i-1][j][1] >> 1;
+        u8MBI5026GFData[i][j][0] = u8MBI5026GFData[i][j][0] << 1;
         
-        if(u8MBI5026GFData[i-1][j][0] & 0x01)
+        if(u8MBI5026GFData[i][j][1] & 0x80)
         {
-          u8MBI5026GFData[i-1][j][1] = u8MBI5026GFData[i-1][j][1] | 0x80;
+          u8MBI5026GFData[i][j][0] = u8MBI5026GFData[i][j][0] | 0x01;
         }
         else
         {
-          u8MBI5026GFData[i-1][j][1] = u8MBI5026GFData[i-1][j][1] & 0x7F;
+          u8MBI5026GFData[i][j][0] = u8MBI5026GFData[i][j][0] & 0xFE;
         }
         
-        u8MBI5026GFData[i-1][j][0] = u8MBI5026GFData[i-1][j][0] >> 1;
+        u8MBI5026GFData[i][j][1] = u8MBI5026GFData[i][j][1] << 1;
         
-        if(i == 1)
+        if(i == 6)
         {
           if(bRollTemp)
           {
-            u8MBI5026GFData[i-1][j][0] = u8MBI5026GFData[i-1][j][0] | 0x80;
+            u8MBI5026GFData[i][j][1] = u8MBI5026GFData[i][j][1] | 0x01;
           }
           else
           {
-            u8MBI5026GFData[i-1][j][0] = u8MBI5026GFData[i-1][j][0] & 0x7F;
+            u8MBI5026GFData[i][j][1] = u8MBI5026GFData[i][j][1] & 0xFE;
           }
         }
         else
         {
-          if(u8MBI5026GFData[i-2][j][1] & 0x01)
+          if(u8MBI5026GFData[i+1][j][0] & 0x80)
           {
-            u8MBI5026GFData[i-1][j][0] = u8MBI5026GFData[i-1][j][0] | 0x80;
+            u8MBI5026GFData[i][j][1] = u8MBI5026GFData[i][j][1] | 0x01;
           }
           else
           {
-            u8MBI5026GFData[i-1][j][0] = u8MBI5026GFData[i-1][j][0] & 0x7F;
+            u8MBI5026GFData[i][j][1] = u8MBI5026GFData[i][j][1] & 0xFE;
           }
         }
         
@@ -441,14 +572,11 @@ static void UserApp1SM_Idle(void)
     UserApp1_MBI5026GF_SendData(u8MBI5026GFData[i-1][u8CD4515Data][0]);
   }
 
-  AT91C_BASE_PIOA->PIO_SODR = PA_12_M_LE;
+  AT91C_BASE_PIOA->PIO_SODR = PA_11_M_LE;
   
-  for(int j=0;j<10;)
-  {
-    j++;
-  }
+  for(int j=0;j<5;j++);
   
-  AT91C_BASE_PIOA->PIO_CODR = PA_12_M_LE;
+  AT91C_BASE_PIOA->PIO_CODR = PA_11_M_LE;
   u8CD4515Data++;
   
   if(u8CD4515Data == 16)
@@ -456,7 +584,7 @@ static void UserApp1SM_Idle(void)
     u8CD4515Data = 0;
   }
   
-  AT91C_BASE_PIOA->PIO_CODR = PA_11_M_OE;
+  AT91C_BASE_PIOA->PIO_CODR = PA_12_M_OE;
 } /* end UserApp1SM_Idle() */
     
 
