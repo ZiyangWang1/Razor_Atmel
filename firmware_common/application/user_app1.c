@@ -136,6 +136,12 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  u8 u8ReceiveBuffer=0;
+  
+  if(DebugScanf(&u8ReceiveBuffer))
+  {
+    DebugPrintf(&u8ReceiveBuffer);
+  }
 
 } /* end UserApp1SM_Idle() */
     
