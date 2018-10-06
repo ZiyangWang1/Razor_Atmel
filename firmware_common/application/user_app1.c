@@ -136,11 +136,11 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  u8 u8ReceiveBuffer=0;
+  u8 au8ReceiveBuffer[2]={0,'\0'};
   
-  if(DebugScanf(&u8ReceiveBuffer))
+  if(DebugScanf(au8ReceiveBuffer))
   {
-    DebugPrintf(&u8ReceiveBuffer);
+    DebugPrintf(au8ReceiveBuffer);
   }
 
 } /* end UserApp1SM_Idle() */
