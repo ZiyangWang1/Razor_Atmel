@@ -87,7 +87,11 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
- 
+  for(int i=0;i<8;i++)
+  {
+    LedOff(i);
+  }
+
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -136,6 +140,25 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  u8 au8Buffer[2]={0,0};
+  
+  if(DebugScanf(au8Buffer))
+  {
+    for(int i=0;i<8;i++)
+    {
+      if(au8Buffer[0]&0x01)
+      {
+        LedOn(i);
+      }
+      else
+      {
+        LedOff(i);
+      }
+      au8Buffer[0]=au8Buffer[0]>>1;
+    }
+  }
+
+  
 
 } /* end UserApp1SM_Idle() */
     
