@@ -42,7 +42,8 @@ All Global variable names shall start with "G_UserApp1"
 ***********************************************************************************************************************/
 /* New variables */
 volatile u32 G_u32UserApp1Flags;                       /* Global state flags */
-
+volatile bool G_bUserApp1ADCFlag=FALSE;                /* Global ADC flag signal */
+volatile u16 G_u16UserApp1ADCResult=0;                 /* Global ADC result */
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Existing variables (defined in other files -- should all contain the "extern" keyword) */
@@ -51,7 +52,6 @@ extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
-
 
 /***********************************************************************************************************************
 Global variable definitions with scope limited to this local application.
@@ -88,6 +88,7 @@ Promises:
 void UserApp1Initialize(void)
 {
  
+  Adc12AssignCallback(ADC12_CH1, UserApp_AdcCallback);
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -123,6 +124,19 @@ void UserApp1RunActiveState(void)
 } /* end UserApp1RunActiveState */
 
 
+/*----------------------------------------------------------------------------------------------------------------------
+Function UserApp_AdcCallback(u16 u16Result_)
+
+Description:
+The callback function for ADC of CH1
+
+*/
+void UserApp_AdcCallback(u16 u16Result_)
+{
+  G_bUserApp1ADCFlag=TRUE;
+  G_u16UserApp1ADCResult=u16Result_;
+}
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -136,6 +150,38 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  static u8 au8ADCData[2];
+  static u8 u8Counter=0;
+  static bool bStringlize=FALSE;
+  static u8 u8Timer=0;
+  
+  if(!bStringlize)
+  {
+    bStringlize=TRUE;
+    au8ADCData[1]=NULL;
+  }
+  
+  u8Timer++;
+  
+  if(G_bUserApp1ADCFlag)
+  {
+    G_bUserApp1ADCFlag=FALSE;
+    au8ADCData[u8Counter]= (u8)(G_u16UserApp1ADCResult / 32 +1);
+    u8Counter++;
+  }
+  
+  if(u8Counter==1)
+  {
+    u8Counter=0;
+    DebugPrintf(au8ADCData);
+  }
+  
+  if(u8Timer==255)
+  {
+    Adc12StartConversion(ADC12_CH1);
+  }
+
+  
 
 } /* end UserApp1SM_Idle() */
     
