@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=1725116481
+Checksum=2014027602
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -24,9 +24,6 @@ CStepIntDis=_ 0
 TraceBufferSize=0x00010000
 TraceStallIfFIFOFull=0x00000000
 TracePortSize=0x00000000
-[struct_types]
-Fmt0=DisplayListHeadType-u8ListSize	3	0
-Fmt1=DisplayListNodeType-u8DataNumber	3	0
 [array_types]
 Fmt0=u8[2]	4	0
 [Log file]
@@ -47,7 +44,8 @@ Exclusions=
 [Disassemble mode]
 mode=0
 [Breakpoints2]
-Count=0
+Bp0=_ 1 "EMUL_TRACE_START" "UserApp1SM_Idle" 0 0 0 0 4294967295 1916296771 0 0
+Count=1
 [Aliases]
 Count=0
 SuppressDialog=0

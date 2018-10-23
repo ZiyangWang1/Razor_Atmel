@@ -28,6 +28,23 @@ Type Definitions
 /**********************************************************************************************************************
 Constants / Definitions
 **********************************************************************************************************************/
+/* Required constants for ANT channel configuration */
+#define ANT_CHANNEL_USERAPP             ANT_CHANNEL_1         /* Channel 0 - 7 */
+#define ANT_CHANNEL_TYPE_USERAPP        CHANNEL_TYPE_SLAVE    /* ANT SLAVE */
+#define ANT_DEVICEID_LO_USERAPP         (u8)1                /* Low byte of two-byte Device # */
+#define ANT_DEVICEID_HI_USERAPP         (u8)0                 /* High byte of two-byte Device # */
+#define ANT_DEVICE_TYPE_USERAPP         (u8)1                 /* 1 - 255 */
+#define ANT_TRANSMISSION_TYPE_USERAPP   (u8)1                 /* 1-127 (MSB is pairing bit) */
+#define ANT_CHANNEL_PERIOD_LO_USERAPP   (u8)0x00              /* Low byte of two-byte channel period 0x0001 - 0x7fff */
+#define ANT_CHANNEL_PERIOD_HI_USERAPP   (u8)0x20              /* High byte of two-byte channel period */
+#define ANT_FREQUENCY_USERAPP           (u8)50                /* 2400MHz + this number 0 - 99 */
+#define ANT_TX_POWER_USERAPP            RADIO_TX_POWER_4DBM   /* RADIO_TX_POWER_0DBM, RADIO_TX_POWER_MINUS5DBM, RADIO_TX_POWER_MINUS10DBM, RADIO_TX_POWER_MINUS20DBM */
+
+#define TIMEOUT_VALUE                   (u32)2000             /* Maximum allowed timeout value for any transition state */
+
+/* G_u32UserAppFlags */
+#define _CHANNEL_SYNCED                 0x00000001            /* Set when channel is synced */
+
 /* Pin definition */
 #define PA_00_GND        PA_00_TP54
 #define PA_03_A          PA_03_HSMCI_MCCK 
@@ -71,12 +88,16 @@ void UserApp1RunActiveState(void);
 static void UserApp1_CD4515BM_ChangeData(u8 u8Data);
 static void UserApp1_MBI5026GF_SendData(u8 u8Data);
 static void UserApp1_FM24CL16B_SendData(u8* pu8Data_,u8 u8DataLength,u8 u8WordLocation,u8 u8PageLocation);
-
+static void UserApp1_GT21L16S2W_SendData(u8 u8Data_);
+static void UserApp1_GT21L16S2W_ReadData(u8* pu8buffer);
 
 /***********************************************************************************************************************
 State Machine Declarations
 ***********************************************************************************************************************/
-static void UserApp1SM_Idle(void);    
+static void UserApp1SM_Idle(void); 
+static void UserApp1SM_Show(void);
+static void UserApp1SM_WaitChannelAssign(void);
+static void UserApp1SM_WaitChannelOpen(void);
 
 static void UserApp1SM_Error(void);         
 
