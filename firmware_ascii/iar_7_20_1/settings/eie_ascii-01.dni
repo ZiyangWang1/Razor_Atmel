@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=2014027602
+Checksum=-1660961441
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -44,7 +44,7 @@ Exclusions=
 [Disassemble mode]
 mode=0
 [Breakpoints2]
-Bp0=_ 1 "EMUL_TRACE_START" "UserApp1SM_Idle" 0 0 0 0 4294967295 1916296771 0 0
+Bp0=_ 1 "EMUL_TRACE_START" "UserApp1SM_Idle" 0 0 0 0 4294967295 1888509507 0 0
 Count=1
 [Aliases]
 Count=0

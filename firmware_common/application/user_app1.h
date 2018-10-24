@@ -89,7 +89,7 @@ static void UserApp1_CD4515BM_ChangeData(u8 u8Data);
 static void UserApp1_MBI5026GF_SendData(u8 u8Data);
 static void UserApp1_FM24CL16B_SendData(u8* pu8Data_,u8 u8DataLength,u8 u8WordLocation,u8 u8PageLocation);
 static void UserApp1_GT21L16S2W_SendData(u8 u8Data_);
-static void UserApp1_GT21L16S2W_ReadData(u8* pu8buffer);
+static void UserApp1_GT21L16S2W_ReadData(void);
 
 /***********************************************************************************************************************
 State Machine Declarations
