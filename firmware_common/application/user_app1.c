@@ -642,7 +642,6 @@ static void UserApp1SM_Idle(void)
   },
   };
   
-  
   /* Check if got new data */
   if( AntReadAppMessageBuffer() )
   {
@@ -962,7 +961,6 @@ static void UserApp1SM_Show(void)
   },
   
   };
-  
   
   /* Check if got new data */
   if( AntReadAppMessageBuffer() )
