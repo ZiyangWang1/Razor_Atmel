@@ -97,16 +97,10 @@ void UserAppInitialize(void)
   u8 au8WelcomeMessage[] = "ANT Master";
 
   /* Write a weclome message on the LCD */
-#if MPG1
   /* Set a message up on the LCD. Delay is required to let the clear command send. */
   LCDCommand(LCD_CLEAR_CMD);
   for(u32 i = 0; i < 10000; i++);
   LCDMessage(LINE1_START_ADDR, au8WelcomeMessage);
-#endif /* MPG 1*/
-  
-#if 0 // untested for MPG2
-  
-#endif /* MPG2 */
 
  /* Configure ANT for this application */
   G_stAntSetupData.AntChannel          = ANT_CHANNEL_USERAPP;
@@ -170,13 +164,60 @@ State Machine Function Definitions
 static void UserAppSM_Idle(void)
 {
   static u8 au8TestMessage[] = {0, 0, 0, 0, 0xA5, 0, 0, 0};
+  static u8 au8DebugBuffer[21]={0};
   u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
+  static u8 u8Counter=0;
+  static u8 u8Passer=0;
+  static bool bTransed=FALSE;
+  static bool bTransmitFinished=TRUE;
+  static u16 u16Timer=0;
+  
+  if(!bTransmitFinished)
+  {
+    u16Timer++;
+    
+    if(bTransed)
+    {
+      u8Counter--;
+      if(u8Counter==1)
+      {
+        bTransed=FALSE;
+      }
+    }
+    else
+    {
+      u8Counter++;
+      if(u8Counter==255)
+      {
+        bTransed=TRUE;
+      }
+    }
+    
+    au8DebugBuffer[u8Passer]=u8Counter;
+    
+    u8Passer++;
+    if(u8Passer==20)
+    {
+      u8Passer=0;
+      DebugPrintf(au8DebugBuffer);
+    }
+  }
+  
+  if(u16Timer==10000)
+  {
+    bTransmitFinished=TRUE;
+    u16Timer=0;
+  }
+  
+  
+  
   
   /* Check all the buttons and update au8TestMessage according to the button state */ 
   au8TestMessage[0] = 0x00;
   if( IsButtonPressed(BUTTON0) )
   {
     au8TestMessage[0] = 0xff;
+    bTransmitFinished=FALSE;
   }
   
   au8TestMessage[1] = 0x00;
@@ -185,7 +226,6 @@ static void UserAppSM_Idle(void)
     au8TestMessage[1] = 0xff;
   }
 
-#ifdef MPG1
   au8TestMessage[2] = 0x00;
   if( IsButtonPressed(BUTTON2) )
   {
@@ -197,7 +237,6 @@ static void UserAppSM_Idle(void)
   {
     au8TestMessage[3] = 0xff;
   }
-#endif /* MPG1 */
   
   if( AntReadData() )
   {
@@ -211,12 +250,7 @@ static void UserAppSM_Idle(void)
         au8DataContent[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentData[i] % 16);
       }
 
-#ifdef MPG1
       LCDMessage(LINE2_START_ADDR, au8DataContent);
-#endif /* MPG1 */
-      
-#ifdef MPG2
-#endif /* MPG2 */
       
     }
     else if(G_eAntApiCurrentMessageClass == ANT_TICK)
